@@ -1,0 +1,9 @@
+# Windows
+Thumbs.db
+desktop.ini
+
+# Local dev server (not needed on Vercel)
+serve.ps1
+
+# Vercel local config
+.vercel

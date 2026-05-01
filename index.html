@@ -1,0 +1,2923 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="he">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- Security: Content Security Policy — limits where scripts/styles/images can come from -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://fonts.gstatic.com https://script.google.com https://script.googleusercontent.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
+<meta http-equiv="X-Content-Type-Options" content="nosniff" />
+<meta http-equiv="Referrer-Policy" content="no-referrer" />
+<meta http-equiv="Permissions-Policy" content="camera=(self), geolocation=()" />
+<title>DCG Tech Ltd | פורטל דוחות עובדים</title>
+<!-- DCG "D" icon as favicon (per BrandBook 2024 — turquoise on dark) -->
+<link rel="icon" type="image/svg+xml" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="50 30 360 320"><g fill="%233DB7BA"><path d="M122.71 268.62c1.12-.93 1.98-2.14 2.49-3.51L183.52 109.05c.9-2.43.57-5.12-.52-7.47-1.03-2.21-1.82-4.55-2.36-7L171.65 53.3c-.84-3.84-4.23-6.58-8.15-6.59l-44.75-.14L66.39 315.44z"/><path d="M72.46 330.91l204.32.61c40.65.12 66.59-18.11 77.1-58.11l-41.26-15.61c-4.34-1.64-8.19-4.12-11.4-7.2-.08-.07-.2-.01-.18.09.01.06-.03.11-.08.12L131.79 282.95c-1.39.26-2.69.88-3.78 1.78z"/><path d="M357.2 257.8l27.94-143.5c2.52-12.9 2.87-23.84 1.11-32.9-1.04-5.39-7.41-6.89-11.63-3.38l-69.11 57.44c-3.01 2.51-3.77 6.75-2.71 10.53.72 2.55 1.15 5.2 1.24 7.93l2.62 73.03c.25 7.2 4.8 13.54 11.54 16.09z"/><path d="M365.55 65.04c4.04-3.36 3.98-9.58-.77-11.82-8.53-4.01-19.43-5.97-32.63-6.01L196.8 46.81c-5.35-.02-9.35 4.92-8.21 10.15l7.47 34.26c1.44 6.62 6.5 11.85 13.06 13.53l69.6 17.75c2 .51 3.92 1.2 5.75 2.04 3.47 1.59 7.64 1.55 10.57-.89z"/></g></svg>'>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<!-- DCG Brand fonts: Bebas Neue (primary, headings) + Poppins (secondary, body) + Heebo for Hebrew support -->
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Poppins:wght@300;400;500;600;700;800&family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- xlsx-js-style: SheetJS fork with full cell-style support (bold, alignment, fills, borders) -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<style>
+  :root {
+    /* DCG official brand palette (BrandBook 2024) */
+    --bg-0: #000000;            /* Black — official brand */
+    --bg-1: #0a0a0a;
+    --bg-card: #0d0d0d;
+    --bg-card-2: #141414;
+    --teal: #3DB7BA;            /* Turquoise — Primary brand color */
+    --teal-light: #77CDCF;      /* Tint */
+    --teal-dim: #2B8082;        /* Shade */
+    --teal-deep: #1F5C5D;       /* Dark Slate Gray (primary palette) */
+    --teal-glow: rgba(61, 183, 186, 0.35);
+    --border-soft: rgba(61, 183, 186, 0.18);
+    --border-strong: rgba(61, 183, 186, 0.50);
+    --text-primary: #ffffff;
+    --text-secondary: #b0b0b0;
+    --text-muted: #6b7280;
+    --danger: #ff4d6d;
+    --warn: #ffb020;
+    --ok: #29e0a3;
+
+    /* DCG official typography */
+    --font-headline: 'Bebas Neue', 'Heebo', system-ui, sans-serif;
+    --font-body: 'Poppins', 'Heebo', system-ui, -apple-system, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg-0);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-weight: 400;
+    min-height: 100vh;
+  }
+  /* Headings use Bebas Neue per brand guidelines */
+  h1, h2, h3, h4, .headline {
+    font-family: var(--font-headline);
+    letter-spacing: 0.04em;
+    font-weight: 400;
+  }
+  /* Hebrew-only contexts use Heebo for legibility */
+  :lang(he) { font-family: 'Heebo', 'Poppins', system-ui, sans-serif; }
+
+  /* Cyber background grid */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background-image:
+      radial-gradient(circle at 20% 0%, rgba(0,229,255,0.08), transparent 40%),
+      radial-gradient(circle at 80% 100%, rgba(0,229,255,0.06), transparent 40%),
+      linear-gradient(rgba(0,229,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,229,255,0.04) 1px, transparent 1px);
+    background-size: auto, auto, 40px 40px, 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+  body::after {
+    content: "";
+    position: fixed; inset: 0;
+    background: radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.55) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .app-shell { position: relative; z-index: 1; }
+
+  /* Cards */
+  .dcg-card {
+    background: linear-gradient(180deg, rgba(22,22,42,0.85), rgba(10,10,10,0.85));
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    backdrop-filter: blur(8px);
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.02), 0 12px 40px rgba(0,0,0,0.55);
+    transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+  }
+  .dcg-card:hover {
+    border-color: var(--border-strong);
+    box-shadow: 0 0 0 1px rgba(0,229,255,0.15), 0 0 24px rgba(0,229,255,0.18), 0 12px 40px rgba(0,0,0,0.55);
+  }
+  .dcg-card-static { background: var(--bg-card-2); border: 1px solid var(--border-soft); border-radius: 12px; }
+
+  /* Buttons */
+  .btn-primary {
+    background: var(--teal);
+    color: #001318;
+    font-weight: 700;
+    border-radius: 10px;
+    padding: 10px 18px;
+    border: 1px solid var(--teal);
+    transition: all .2s ease;
+    cursor: pointer;
+    letter-spacing: .2px;
+  }
+  .btn-primary:hover {
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.18), 0 0 22px var(--teal-glow);
+    transform: translateY(-1px);
+  }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--teal);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 10px 18px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .btn-ghost:hover {
+    background: rgba(0,229,255,0.08);
+    box-shadow: 0 0 14px var(--teal-glow);
+  }
+
+  /* ── PIN dots ── */
+  /* Employee selection grid */
+  .employee-btn {
+    background: var(--bg-card-2);
+    border: 1.5px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 14px 6px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    text-align: center;
+    letter-spacing: .02em;
+    word-break: break-word;
+    min-height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .employee-btn:hover, .employee-btn:focus {
+    border-color: var(--teal);
+    background: rgba(61,183,186,.12);
+    color: var(--teal);
+    outline: none;
+    transform: translateY(-1px);
+  }
+  .employee-btn:active { transform: translateY(0); }
+
+  .btn-danger-ghost {
+    background: transparent;
+    color: var(--danger);
+    border: 1px solid rgba(255,77,109,0.35);
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s ease;
+  }
+  .btn-danger-ghost:hover { background: rgba(255,77,109,0.08); }
+
+  /* Inputs */
+  input[type="text"], input[type="number"], input[type="date"], input[type="month"],
+  input[type="password"], input[type="email"], select, textarea {
+    background: #0d0d18;
+    color: var(--text-primary);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 9px 12px;
+    width: 100%;
+    transition: border-color .2s ease, box-shadow .2s ease;
+    font-family: inherit;
+    font-size: 14px;
+  }
+  input:focus, select:focus, textarea:focus {
+    outline: none;
+    border-color: var(--teal);
+    box-shadow: 0 0 0 3px rgba(0,229,255,0.18);
+  }
+  input::placeholder { color: var(--text-muted); }
+  select option { background: #0d0d18; color: #fff; }
+
+  /* Checkboxes */
+  .dcg-check {
+    width: 22px; height: 22px;
+    border: 1.5px solid rgba(0,229,255,0.4);
+    border-radius: 6px;
+    background: #0d0d18;
+    cursor: pointer;
+    position: relative;
+    transition: all .15s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    flex: 0 0 22px;
+  }
+  .dcg-check:hover { border-color: var(--teal); box-shadow: 0 0 8px rgba(0,229,255,0.25); }
+  .dcg-check:checked {
+    background: var(--teal);
+    border-color: var(--teal);
+  }
+  .dcg-check:checked::after {
+    content: "✓";
+    color: #001318;
+    font-weight: 900;
+    font-size: 14px;
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .dcg-check:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* Tables */
+  .dcg-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+  /* Each table sets a sensible min-width so on mobile the user gets a proper
+     horizontally-scrollable table instead of cells getting crushed. */
+  #attendanceTable { min-width: 600px; }
+  #expenseTable    { min-width: 720px; }
+  #travelTable     { min-width: 880px; }
+  .dcg-table thead th {
+    background: linear-gradient(180deg, rgba(0,229,255,0.18), rgba(0,229,255,0.08));
+    color: var(--teal);
+    font-weight: 700;
+    text-align: right;
+    padding: 12px 10px;
+    border-bottom: 1px solid var(--border-strong);
+    font-size: 13px;
+    letter-spacing: .3px;
+    text-transform: none;
+    position: sticky; top: 0;
+    z-index: 2;
+  }
+  .dcg-table tbody td {
+    padding: 8px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 14px;
+  }
+  .dcg-table tbody tr:nth-child(odd) { background: rgba(255,255,255,0.015); }
+  .dcg-table tbody tr.is-saturday { background: rgba(255,77,109,0.06) !important; color: #ffb6c1; }
+  .dcg-table tbody tr.is-saturday td { color: #ffb6c1; }
+  .dcg-table tbody tr.is-friday { background: rgba(255,176,32,0.05) !important; }
+  .dcg-table tbody tr.is-vacation td input[type="number"] { background: rgba(255,176,32,0.08); }
+  .dcg-table tbody tr.is-sick td input[type="number"] { background: rgba(255,77,109,0.08); }
+  .dcg-table tbody tr.is-reserve td input[type="number"] { background: rgba(110,180,255,0.10); }
+  .dcg-table tbody tr.is-reserve { box-shadow: inset 3px 0 0 #6eb4ff; }
+  .dcg-table tfoot td {
+    background: linear-gradient(180deg, rgba(0,229,255,0.10), rgba(0,229,255,0.04));
+    color: var(--teal);
+    font-weight: 700;
+    padding: 12px 10px;
+    border-top: 1px solid var(--border-strong);
+    font-size: 14px;
+  }
+
+  /* Badges */
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 3px 10px; border-radius: 999px;
+    font-size: 11px; font-weight: 700; letter-spacing: .3px;
+  }
+  .badge-draft { background: rgba(255,176,32,0.12); color: #ffb020; border: 1px solid rgba(255,176,32,0.4); }
+  .badge-submitted { background: rgba(41,224,163,0.10); color: #29e0a3; border: 1px solid rgba(41,224,163,0.4); }
+  .badge-sent { background: rgba(0,229,255,0.10); color: var(--teal); border: 1px solid var(--border-strong); }
+
+  /* Logo glow */
+  .logo-glow { filter: drop-shadow(0 0 14px rgba(0,229,255,0.45)); }
+
+  /* Section header underline */
+  .section-title::after {
+    content: "";
+    display: block;
+    width: 56px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--teal), transparent);
+    margin-top: 8px;
+  }
+
+  /* Animations */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+  .anim-fade { animation: fadeUp .35s ease both; }
+
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(0,229,255,0); }
+    50% { box-shadow: 0 0 0 6px rgba(0,229,255,0.15); }
+  }
+  .pulse-glow { animation: pulseGlow 2s infinite; }
+
+  @keyframes drawCheck {
+    0% { stroke-dashoffset: 100; }
+    100% { stroke-dashoffset: 0; }
+  }
+  .check-anim circle { stroke-dasharray: 300; stroke-dashoffset: 300; animation: drawCheck 0.6s ease forwards; }
+  .check-anim path { stroke-dasharray: 100; stroke-dashoffset: 100; animation: drawCheck 0.5s 0.3s ease forwards; }
+
+  /* Signature pad */
+  #signaturePad { width: 100%; height: 140px; background: #0d0d18; border: 1px dashed var(--border-strong); border-radius: 8px; cursor: crosshair; display: block; }
+
+  /* Receipt thumbnails */
+  .receipt-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(0,229,255,0.06);
+    border: 1px solid var(--border-soft);
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 12px;
+    margin-inline-end: 4px;
+    margin-bottom: 4px;
+  }
+  .receipt-chip button { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 14px; padding: 0; line-height: 1; }
+
+  /* Tagline */
+  .tagline {
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--teal);
+    text-transform: uppercase;
+    opacity: .8;
+  }
+
+  /* Brand-color overrides for Tailwind cyan utility classes — keeps DCG turquoise everywhere */
+  .text-cyan-300, .text-cyan-400, .text-cyan-500 { color: var(--teal) !important; }
+
+  /* Section/page headlines use Bebas Neue for that DCG identity */
+  .brand-title {
+    font-family: var(--font-headline);
+    letter-spacing: 0.06em;
+    font-weight: 400;
+    text-transform: uppercase;
+  }
+
+  /* DCG Brand Logo — extracted from official BrandBook 2024 PDF */
+  .dcg-logo { display: inline-block; line-height: 0; }
+  .dcg-logo-large { filter: drop-shadow(0 0 24px rgba(61,183,186,0.55)); }
+  .dcg-logo-small { filter: drop-shadow(0 0 8px rgba(61,183,186,0.40)); }
+  .dcg-icon-bg {
+    background: var(--teal);
+    padding: 6px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Hide scrollbar but keep scroll */
+  .scroll-x { overflow-x: auto; }
+  .scroll-x::-webkit-scrollbar { height: 6px; }
+  .scroll-x::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.25); border-radius: 4px; }
+
+  /* Hidden helper */
+  .hidden { display: none !important; }
+
+  /* ==========================================================
+     MOBILE RESPONSIVE OVERRIDES (≤ 640px)
+     ========================================================== */
+  @media (max-width: 640px) {
+    /* Body becomes slightly tighter */
+    body { font-size: 15px; }
+
+    /* Headlines scale down so they don't overflow on narrow screens */
+    h1.text-3xl, .text-3xl { font-size: 1.65rem !important; line-height: 1.2; }
+    h1.text-2xl, h2.text-2xl, .text-2xl { font-size: 1.35rem !important; line-height: 1.25; }
+
+    /* Cards: tighter padding to give content more room */
+    .dcg-card { border-radius: 12px; }
+    .dcg-card.p-7 { padding: 18px !important; }
+    .dcg-card.p-6 { padding: 16px !important; }
+    .dcg-card.p-5 { padding: 14px !important; }
+
+    /* All form inputs: bigger tap targets, prevents iOS zoom-on-focus (font-size ≥ 16px) */
+    input[type="text"], input[type="number"], input[type="date"], input[type="month"],
+    input[type="datetime-local"], input[type="password"], input[type="email"], select, textarea {
+      font-size: 16px !important;
+      padding: 11px 12px;
+      min-height: 44px;
+    }
+
+    /* Buttons: ensure 44px min touch target on phones */
+    .btn-primary, .btn-ghost {
+      min-height: 44px;
+      padding: 11px 16px;
+    }
+    .btn-danger-ghost { min-height: 36px; min-width: 36px; padding: 8px 12px; }
+
+    /* Larger checkboxes for finger taps */
+    .dcg-check { width: 26px !important; height: 26px !important; flex-basis: 26px !important; }
+    .dcg-check:checked::after { font-size: 16px; }
+
+    /* Tables: reduce padding, add horizontal scroll hint */
+    .dcg-table thead th { padding: 10px 6px; font-size: 12px; }
+    .dcg-table tbody td { padding: 7px 6px; font-size: 13px; }
+    .dcg-table tfoot td { padding: 10px 6px; font-size: 13px; }
+    .dcg-table input[type="number"], .dcg-table input[type="text"], .dcg-table input[type="date"] {
+      min-height: 38px; padding: 7px 8px; font-size: 15px !important;
+    }
+    .scroll-x {
+      position: relative;
+      -webkit-overflow-scrolling: touch;
+    }
+    /* Subtle gradient on right side of horizontally-scrolling tables to hint at more content */
+    .scroll-x::after {
+      content: ""; position: sticky; left: 0; bottom: 0;
+      pointer-events: none;
+    }
+
+    /* Header: keep logo clear, hide subtitle text */
+    #appHeader .max-w-6xl { padding: 10px 12px; }
+
+    /* Login screen: a touch more breathing room top/bottom */
+    #screen-login { padding: 24px 16px; }
+
+    /* Dashboard cards: stack with comfortable spacing */
+    .dcg-card.p-6 h3, .dcg-card.p-7 h3 { font-size: 1.05rem; }
+
+    /* Confirm screen check-anim smaller */
+    .check-anim { width: 90px; height: 90px; }
+
+    /* History buttons: keep them on their own row, full-width spread */
+    .hist-edit, .hist-resend {
+      flex: 1 1 auto; justify-content: center; min-height: 42px;
+    }
+
+    /* Receipt chips: tighter */
+    .receipt-chip { font-size: 11px; padding: 4px 8px; }
+
+    /* Toast: less aggressive width on phone */
+    #toastContainer { left: 8px; right: 8px; top: 8px; }
+    .toast { max-width: 100%; font-size: 14px; }
+
+    /* Signature pad: shorter on mobile */
+    #signaturePad, #trvSignaturePad { height: 110px !important; }
+
+    /* ── Employee selection grid ── */
+    #employeeGrid { gap: 6px; }
+    .employee-btn {
+      font-size: 0.78rem;
+      padding: 10px 4px;
+      min-height: 48px;
+      border-radius: 8px;
+    }
+
+    /* ── Login card: less top margin for logo ── */
+    #screen-login .text-center.mb-10 { margin-bottom: 1.5rem; }
+    #screen-login .dcg-logo-large { max-width: 220px !important; }
+
+    /* ── Screen section headers ── */
+    .screen h2.text-xl { font-size: 1.05rem !important; line-height: 1.25; }
+
+    /* ── History action buttons: full width on mobile ── */
+    .hist-edit, .hist-resend {
+      font-size: 12px !important;
+      padding: 8px 10px !important;
+    }
+
+    /* ── Dashboard cards: full-width tap area ── */
+    #screen-dashboard .dcg-card.p-6 { padding: 16px !important; }
+
+    /* ── Confirmation screen ── */
+    #screen-confirm .flex.flex-col { gap: 10px; }
+
+    /* ── Expense receipt buttons: wrap cleanly ── */
+    #screen-expense .flex.gap-2.mt-3 { flex-wrap: wrap; }
+
+    /* ── Exchange rate label: hide hint text on tiny screens ── */
+    .text-xs.text-gray-500:not(.tagline) { font-size: 10px; }
+  }
+
+  /* Extra-small phones (≤ 380px) */
+  @media (max-width: 380px) {
+    .dcg-table thead th { font-size: 11px; padding: 8px 4px; }
+    .dcg-table tbody td { font-size: 12px; padding: 6px 4px; }
+    h1.text-3xl, .text-3xl { font-size: 1.45rem !important; }
+    /* Employee grid: 2 columns on very tiny phones */
+    #employeeGrid { grid-template-columns: repeat(2, 1fr) !important; }
+    .employee-btn { font-size: 0.8rem; padding: 12px 4px; }
+  }
+
+  /* Toast */
+  #toastContainer {
+    position: fixed; top: 16px; left: 16px; z-index: 1000;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .toast {
+    background: var(--bg-card-2);
+    border: 1px solid var(--border-strong);
+    color: #fff;
+    padding: 10px 16px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    animation: fadeUp .25s ease both;
+    max-width: 360px;
+  }
+  .toast.error { border-color: rgba(255,77,109,0.5); }
+  .toast.success { border-color: rgba(41,224,163,0.5); }
+</style>
+</head>
+<body>
+
+<!-- ======================================================
+     OFFICIAL DCG LOGO — paths extracted directly from
+     "DCG logo for dark background.pdf" (BrandBook 2024)
+     Used via <use href="#dcg-full"> / <use href="#dcg-icon">
+     ====================================================== -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="dcg-full" viewBox="0 0 1086 500">
+      <g fill="#3DB7BA">
+        <path d="M 122.71 268.62 C 123.83 267.69 124.69 266.48 125.20 265.11 L 183.52 109.05 C 184.42 106.62 184.09 103.93 183 101.58 C 181.97 99.37 181.18 97.02 180.64 94.58 L 171.65 53.30 C 170.81 49.46 167.42 46.72 163.50 46.71 L 118.75 46.57 L 66.39 315.44 Z"/>
+        <path d="M 72.46 330.91 L 276.78 331.52 C 317.43 331.64 343.37 313.41 353.88 273.41 L 312.62 257.80 C 308.28 256.16 304.43 253.68 301.22 250.60 C 301.14 250.53 301.02 250.59 301.04 250.69 C 301.05 250.75 301.02 250.80 300.96 250.81 L 131.79 282.95 C 130.40 283.21 129.10 283.83 128.01 284.73 Z"/>
+        <path d="M 357.20 257.80 L 385.14 114.30 C 387.66 101.40 388.01 90.46 386.25 81.40 C 385.21 76.01 378.84 74.51 374.62 78.02 L 305.51 135.46 C 302.50 137.97 301.74 142.21 302.80 145.99 C 303.52 148.54 303.95 151.19 304.04 153.92 L 306.66 226.95 C 306.91 234.15 311.46 240.49 318.20 243.04 Z"/>
+        <path d="M 365.55 65.04 C 369.59 61.68 369.53 55.46 364.78 53.22 C 356.25 49.21 345.35 47.25 332.15 47.21 L 196.80 46.81 C 191.45 46.79 187.45 51.73 188.59 56.96 L 196.06 91.22 C 197.50 97.84 202.56 103.07 209.12 104.75 L 278.72 122.50 C 280.72 123.01 282.64 123.70 284.47 124.54 C 287.94 126.13 292.11 126.09 295.04 123.65 Z"/>
+        <path d="M 837.30 53.88 C 836.41 50.11 833.05 47.45 829.18 47.44 L 795.21 47.34 C 751.76 47.21 725.54 68.05 716.50 114.46 L 686.87 266.64 C 683.34 284.75 683.95 298.98 688.57 309.61 C 690.46 313.98 696.01 314.60 699.67 311.56 L 752.55 267.61 C 754.87 265.67 755.90 262.62 756.02 259.60 C 756.11 257.63 756.39 255.45 756.86 253.05 L 781.12 128.46 C 784.13 112.98 790.89 106.73 806.65 106.78 L 839.28 106.88 C 844.69 106.89 848.70 101.84 847.45 96.57 Z"/>
+        <path d="M 872.72 106.98 C 868.85 106.96 865.50 104.30 864.60 100.54 L 854.46 57.84 C 853.21 52.57 857.21 47.52 862.63 47.54 L 945.14 47.79 C 988.59 47.92 1007.10 68.89 998.06 115.30 L 992.04 146.24 L 926.01 146.04 L 930.73 121.79 C 932.77 111.34 928.90 107.14 913.14 107.09 Z"/>
+        <path d="M 772.52 274.82 C 770.20 274.73 767.88 275.38 766.09 276.86 L 714.98 319.34 C 710.39 323.16 711.28 330.29 717.09 331.73 C 723.56 333.33 730.99 334.13 739.36 334.16 L 889.72 334.61 C 932.74 334.73 959.38 313.89 968.42 267.48 L 986.50 174.67 L 838.27 174.23 L 827.60 229.00 L 910.23 229.24 L 904.70 257.67 C 902.18 270.63 896.59 275.22 881.26 275.17 L 774.34 274.86 C 773.72 274.85 773.11 274.84 772.52 274.82 Z"/>
+        <path d="M 603.29 104.88 C 601.75 106.25 599.76 107.00 597.70 106.99 L 501.56 106.70 C 486.23 106.66 479.55 112.50 476.54 127.96 L 452.44 251.72 C 449.43 267.19 453.39 273.06 469.16 273.11 L 512.67 273.24 C 516.52 273.25 519.86 275.88 520.77 279.62 L 531.40 323.16 C 532.69 328.44 528.68 333.53 523.25 333.51 L 434.86 333.25 C 391.41 333.12 373.33 312.14 382.37 265.74 L 412.00 113.55 C 421.04 67.14 447.26 46.30 490.71 46.43 L 638.09 46.87 C 642.38 46.88 646.42 47.10 650.21 47.52 C 656.64 48.24 658.41 55.89 653.57 60.19 Z"/>
+        <path d="M 626.11 105.57 C 622.62 108.70 622.38 114.44 622.64 119.12 C 622.81 122.23 625.11 124.98 628.23 124.98 L 677.71 124.98 C 683.98 124.98 689.38 120.54 690.58 114.38 C 695.09 91.20 692.84 74.36 684.04 63.30 C 681.46 60.06 676.71 60.21 673.63 62.98 Z"/>
+        <path d="M 592.03 266.29 C 596.55 260.64 602.11 255.14 609.34 255.14 L 651.52 255.14 C 657.55 255.14 662.09 260.64 660.94 266.57 C 651.90 312.98 625.68 333.82 582.23 333.69 L 556.66 333.61 C 552.83 333.60 549.50 330.99 548.57 327.27 L 537.68 283.73 C 536.36 278.44 540.38 273.32 545.83 273.34 L 572.66 273.42 C 581.89 273.45 587.98 271.34 592.03 266.29 Z"/>
+      </g>
+      <g fill="#FFFFFF">
+        <path d="M 937.47 424.43 L 936.17 431.09 L 919.59 431.04 L 914.97 454.74 L 935.34 454.80 L 934.02 461.56 L 906.09 461.48 L 919.07 394.84 L 947 394.93 L 945.68 401.69 L 925.32 401.63 L 920.89 424.38 Z"/>
+        <path d="M 856.93 461.33 L 869.91 394.70 L 877.47 394.72 L 865.81 454.60 L 885.21 454.66 L 883.89 461.41 Z"/>
+        <path d="M 831.07 393.91 C 836.30 393.93 839.86 395.46 841.72 398.52 C 843.65 401.57 844.12 405.64 843.13 410.71 L 842.02 416.43 L 834.84 416.41 L 836.03 410.31 C 836.62 407.27 836.43 404.92 835.46 403.26 C 834.57 401.55 832.73 400.68 829.95 400.68 C 827.23 400.67 825.06 401.52 823.43 403.23 C 821.82 404.88 820.71 407.22 820.12 410.27 L 813.26 445.49 C 812.67 448.53 812.85 450.91 813.81 452.63 C 814.79 454.29 816.63 455.12 819.34 455.13 C 822.13 455.13 824.29 454.31 825.84 452.67 C 827.46 450.96 828.57 448.58 829.17 445.54 L 831.77 432.21 L 824.78 432.19 L 826.08 425.52 L 840.24 425.57 L 836.42 445.18 C 835.43 450.25 833.38 454.31 830.27 457.35 C 827.21 460.39 823.07 461.90 817.83 461.88 C 812.66 461.87 809.11 460.33 807.18 457.28 C 805.32 454.23 804.88 450.16 805.87 445.08 L 812.58 410.63 C 813.07 408.09 813.81 405.80 814.79 403.77 C 815.84 401.68 817.13 399.91 818.64 398.45 C 820.21 397.00 822.02 395.89 824.04 395.13 C 826.14 394.31 828.48 393.91 831.07 393.91 Z"/>
+        <path d="M 753.84 461.03 L 747.05 461.00 L 760.03 394.37 L 769.63 394.40 L 775.96 442.61 L 785.34 394.45 L 792.03 394.46 L 779.05 461.10 L 771.20 461.08 L 764.33 407.15 Z"/>
+        <path d="M 700.02 447.43 L 694.79 460.85 L 687.81 460.83 L 713.78 394.23 L 724.74 394.27 L 724.76 460.94 L 717.20 460.91 L 717.19 447.48 Z M 702.23 441.06 L 717.36 441.11 L 717.19 402.63 Z"/>
+        <path d="M 619.00 436.71 L 612.97 393.93 L 620.82 393.95 L 625.02 426.73 L 642.06 394.02 L 649.24 394.04 L 626.46 436.74 L 621.81 460.63 L 614.34 460.61 Z"/>
+        <path d="M 576.72 393.82 C 582.08 393.84 585.68 395.15 587.50 397.76 C 589.38 400.37 589.84 404.15 588.88 409.10 L 587.82 414.52 C 587.11 418.21 585.85 421.19 584.04 423.46 C 582.24 425.75 579.80 427.33 576.71 428.21 C 579.65 429.11 581.52 430.76 582.35 433.18 C 583.18 435.53 583.25 438.51 582.54 442.13 L 580.52 452.51 C 580.24 453.96 580.03 455.39 579.88 456.79 C 579.75 458.13 579.90 459.36 580.32 460.51 L 572.66 460.48 C 572.39 459.53 572.27 458.52 572.29 457.43 C 572.32 456.29 572.55 454.61 572.98 452.39 L 575.02 441.92 C 575.75 438.17 575.38 435.60 573.90 434.20 C 572.50 432.73 570.22 432.00 567.05 431.99 L 561.72 431.97 L 556.18 460.43 L 548.61 460.41 L 561.59 393.78 Z M 568.66 425.23 C 571.70 425.24 574.18 424.64 576.09 423.44 C 578.02 422.18 579.34 419.74 580.04 416.12 L 581.28 409.74 C 581.88 406.70 581.71 404.41 580.77 402.88 C 579.91 401.36 578.05 400.59 575.21 400.58 L 567.84 400.56 L 563.04 425.21 Z"/>
+        <path d="M 528.55 423.21 L 527.26 429.87 L 510.68 429.82 L 506.06 453.52 L 526.43 453.58 L 525.11 460.34 L 497.18 460.26 L 510.15 393.63 L 538.09 393.71 L 536.77 400.46 L 516.40 400.41 L 511.97 423.16 Z"/>
+        <path d="M 458.86 393.47 L 458.62 451.48 L 480.87 393.54 L 487.85 393.56 L 462.17 460.16 L 451.02 460.12 L 451.19 393.45 Z"/>
+        <path d="M 420.10 422.88 L 418.80 429.55 L 402.22 429.50 L 397.60 453.20 L 417.97 453.26 L 416.65 460.02 L 388.72 459.94 L 401.70 393.30 L 429.63 393.38 L 428.31 400.14 L 407.95 400.08 L 403.52 422.83 Z"/>
+        <path d="M 337.12 422.64 L 335.82 429.30 L 319.24 429.25 L 314.62 452.95 L 334.99 453.01 L 333.67 459.77 L 305.74 459.69 L 318.72 393.05 L 346.65 393.14 L 345.33 399.89 L 324.97 399.84 L 320.54 422.59 Z"/>
+        <path d="M 279.20 392.93 C 284.56 392.95 288.15 394.26 289.97 396.87 C 291.86 399.48 292.32 403.26 291.36 408.21 L 290.30 413.64 C 289.58 417.32 288.32 420.30 286.52 422.58 C 284.72 424.86 282.28 426.44 279.19 427.32 C 282.13 428.22 284 429.88 284.82 432.29 C 285.66 434.64 285.73 437.63 285.02 441.24 L 283 451.62 C 282.71 453.08 282.50 454.51 282.36 455.90 C 282.23 457.24 282.38 458.48 282.80 459.62 L 275.14 459.60 C 274.87 458.64 274.75 457.63 274.76 456.55 C 274.79 455.41 275.02 453.72 275.45 451.50 L 277.49 441.03 C 278.22 437.29 277.85 434.71 276.38 433.31 C 274.98 431.85 272.70 431.11 269.53 431.10 L 264.20 431.09 L 258.65 459.55 L 251.09 459.52 L 264.06 392.89 Z M 271.14 424.34 C 274.18 424.35 276.65 423.76 278.57 422.55 C 280.50 421.29 281.81 418.85 282.52 415.23 L 283.76 408.86 C 284.35 405.81 284.18 403.52 283.25 402.00 C 282.38 400.47 280.53 399.70 277.68 399.69 L 270.31 399.67 L 265.51 424.33 Z"/>
+        <path d="M 207.33 443.68 C 206.74 446.73 206.89 449.11 207.79 450.82 C 208.76 452.48 210.63 453.31 213.41 453.32 C 216.13 453.32 218.26 452.50 219.81 450.86 C 221.44 449.15 222.55 446.77 223.14 443.73 L 233.06 392.80 L 240.14 392.82 L 230.29 443.37 C 229.30 448.44 227.28 452.53 224.22 455.64 C 221.17 458.67 217.02 460.18 211.79 460.17 C 206.61 460.16 203.10 458.62 201.23 455.57 C 199.38 452.45 198.95 448.35 199.94 443.28 L 209.78 392.73 L 217.25 392.75 Z"/>
+        <path d="M 171.52 391.95 C 176.75 391.96 180.30 393.50 182.17 396.55 C 184.10 399.61 184.57 403.67 183.58 408.75 L 182.41 414.75 L 175.23 414.72 L 176.48 408.34 C 177.07 405.30 176.88 402.95 175.91 401.30 C 175.02 399.58 173.18 398.71 170.39 398.71 C 167.68 398.70 165.51 399.55 163.88 401.26 C 162.27 402.91 161.16 405.25 160.57 408.30 L 153.71 443.52 C 153.12 446.57 153.30 448.95 154.26 450.66 C 155.23 452.32 157.08 453.15 159.79 453.16 C 162.57 453.16 164.74 452.35 166.29 450.70 C 167.91 448.99 169.02 446.61 169.62 443.57 L 171.30 434.90 L 178.48 434.93 L 176.87 443.21 C 175.88 448.29 173.83 452.34 170.71 455.38 C 167.66 458.42 163.52 459.93 158.28 459.91 C 153.11 459.90 149.56 458.37 147.63 455.31 C 145.77 452.26 145.33 448.19 146.32 443.12 L 153.03 408.66 C 153.52 406.12 154.26 403.83 155.24 401.80 C 156.29 399.71 157.57 397.94 159.09 396.48 C 160.66 395.03 162.46 393.92 164.49 393.16 C 166.59 392.34 168.93 391.94 171.52 391.95 Z"/>
+        <path d="M 123.71 422 L 122.41 428.66 L 105.83 428.61 L 101.21 452.32 L 121.58 452.38 L 120.27 459.14 L 92.34 459.05 L 105.31 392.42 L 133.24 392.50 L 131.93 399.26 L 111.56 399.20 L 107.13 421.95 Z"/>
+        <path d="M 67.13 391.64 C 72.30 391.65 75.82 393.18 77.68 396.24 C 79.55 399.23 80 403.26 79.01 408.34 L 78.66 410.15 L 71.48 410.13 L 71.91 407.94 C 72.50 404.89 72.34 402.54 71.44 400.89 C 70.53 399.23 68.72 398.40 66 398.39 C 63.29 398.39 61.16 399.21 59.61 400.85 C 58.05 402.50 56.99 404.81 56.41 407.80 C 55.93 410.27 56.06 412.43 56.80 414.27 C 57.61 416.12 58.69 417.84 60.07 419.43 C 61.45 420.95 62.96 422.48 64.61 424.01 C 66.32 425.48 67.85 427.10 69.19 428.88 C 70.52 430.66 71.52 432.70 72.17 434.99 C 72.90 437.21 72.96 439.88 72.36 442.99 C 71.37 448.07 69.32 452.13 66.21 455.16 C 63.17 458.14 59.03 459.62 53.79 459.60 C 48.55 459.59 45 458.09 43.13 455.09 C 41.26 452.04 40.82 447.98 41.81 442.90 L 42.55 439.09 L 49.63 439.11 L 48.82 443.30 C 48.22 446.35 48.41 448.70 49.39 450.35 C 50.36 452 52.20 452.84 54.91 452.84 C 57.63 452.85 59.80 452.03 61.41 450.39 C 63.02 448.74 64.13 446.39 64.72 443.35 C 65.20 440.87 65.04 438.75 64.22 436.96 C 63.48 435.12 62.41 433.43 61.03 431.91 C 59.66 430.32 58.14 428.79 56.49 427.32 C 54.85 425.79 53.36 424.14 52.02 422.36 C 50.69 420.57 49.66 418.57 48.92 416.34 C 48.27 414.06 48.25 411.36 48.85 408.25 C 49.85 403.11 51.87 399.05 54.91 396.07 C 57.95 393.10 62.02 391.62 67.13 391.64 Z"/>
+      </g>
+    </symbol>
+    <!-- Icon-only version: just the "D" letter (first 4 paths of the DCG mark) -->
+    <symbol id="dcg-icon" viewBox="50 30 360 320">
+      <g fill="#3DB7BA">
+        <path d="M 122.71 268.62 C 123.83 267.69 124.69 266.48 125.20 265.11 L 183.52 109.05 C 184.42 106.62 184.09 103.93 183 101.58 C 181.97 99.37 181.18 97.02 180.64 94.58 L 171.65 53.30 C 170.81 49.46 167.42 46.72 163.50 46.71 L 118.75 46.57 L 66.39 315.44 Z"/>
+        <path d="M 72.46 330.91 L 276.78 331.52 C 317.43 331.64 343.37 313.41 353.88 273.41 L 312.62 257.80 C 308.28 256.16 304.43 253.68 301.22 250.60 C 301.14 250.53 301.02 250.59 301.04 250.69 C 301.05 250.75 301.02 250.80 300.96 250.81 L 131.79 282.95 C 130.40 283.21 129.10 283.83 128.01 284.73 Z"/>
+        <path d="M 357.20 257.80 L 385.14 114.30 C 387.66 101.40 388.01 90.46 386.25 81.40 C 385.21 76.01 378.84 74.51 374.62 78.02 L 305.51 135.46 C 302.50 137.97 301.74 142.21 302.80 145.99 C 303.52 148.54 303.95 151.19 304.04 153.92 L 306.66 226.95 C 306.91 234.15 311.46 240.49 318.20 243.04 Z"/>
+        <path d="M 365.55 65.04 C 369.59 61.68 369.53 55.46 364.78 53.22 C 356.25 49.21 345.35 47.25 332.15 47.21 L 196.80 46.81 C 191.45 46.79 187.45 51.73 188.59 56.96 L 196.06 91.22 C 197.50 97.84 202.56 103.07 209.12 104.75 L 278.72 122.50 C 280.72 123.01 282.64 123.70 284.47 124.54 C 287.94 126.13 292.11 126.09 295.04 123.65 Z"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<div id="toastContainer"></div>
+
+<!-- ============= RECEIPT VIEWER + CROPPER MODAL ============= -->
+<div id="receiptModal" class="hidden" style="position:fixed; inset:0; z-index:9999; background:rgba(0,0,0,0.92); backdrop-filter:blur(8px); display:flex; flex-direction:column; padding:0;">
+  <div class="flex items-center justify-between p-3 border-b border-white/10" style="background:rgba(0,0,0,0.7);">
+    <div class="flex items-center gap-3 min-w-0">
+      <span style="color:var(--teal); font-weight:700; font-size:14px;">📄 צפייה בקבלה</span>
+      <span id="receiptModalName" class="text-xs text-gray-400 truncate"></span>
+    </div>
+    <div class="flex items-center gap-2 flex-wrap">
+      <button id="receiptCropBtn"   class="btn-ghost text-xs" style="padding:6px 12px;">✂️ חתוך</button>
+      <button id="receiptRotateBtn" class="btn-ghost text-xs" style="padding:6px 12px;">🔄 סובב</button>
+      <button id="receiptDownloadBtn" class="btn-ghost text-xs" style="padding:6px 12px;">⬇️ הורד</button>
+      <button id="receiptCloseBtn"  class="btn-primary text-xs" style="padding:6px 12px;">✕ סגור</button>
+    </div>
+  </div>
+
+  <div id="receiptViewArea" style="flex:1; display:flex; align-items:center; justify-content:center; overflow:auto; padding:20px; position:relative;">
+    <img id="receiptImg" src="" alt="" style="max-width:100%; max-height:calc(100vh - 140px); object-fit:contain; box-shadow:0 0 40px rgba(0,229,255,0.15); border-radius:6px;" />
+    <iframe id="receiptPdf" class="hidden" src="" style="width:100%; height:calc(100vh - 140px); border:0; background:#fff;"></iframe>
+  </div>
+
+  <!-- Crop interface (shown only when ✂️ is clicked) -->
+  <div id="receiptCropPane" class="hidden" style="position:absolute; inset:60px 0 0 0; background:rgba(0,0,0,0.95); padding:16px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+    <div style="position:relative; max-width:90vw; max-height:calc(100vh - 200px); user-select:none; touch-action:none;" id="cropContainer">
+      <canvas id="cropCanvas" style="max-width:100%; max-height:calc(100vh - 220px); display:block; box-shadow:0 0 40px rgba(0,229,255,0.2);"></canvas>
+      <div id="cropBox" style="position:absolute; border:2px solid var(--teal); box-shadow:0 0 0 9999px rgba(0,0,0,0.55); pointer-events:auto; cursor:move;">
+        <div class="crop-handle" data-h="nw" style="top:-7px;left:-7px;cursor:nwse-resize;"></div>
+        <div class="crop-handle" data-h="ne" style="top:-7px;right:-7px;cursor:nesw-resize;"></div>
+        <div class="crop-handle" data-h="sw" style="bottom:-7px;left:-7px;cursor:nesw-resize;"></div>
+        <div class="crop-handle" data-h="se" style="bottom:-7px;right:-7px;cursor:nwse-resize;"></div>
+      </div>
+    </div>
+    <p class="text-xs text-gray-400 mt-3">גרור את ריבוע הסימון או את הפינות לבחירת אזור החיתוך</p>
+    <div class="flex flex-wrap gap-2 mt-4">
+      <button id="cropApplyBtn"  class="btn-primary text-sm flex-1" style="min-width:110px;">✓ שמור חיתוך</button>
+      <button id="cropResetBtn"  class="btn-ghost text-sm flex-1" style="min-width:80px;">⤺ אפס</button>
+      <button id="cropCancelBtn" class="btn-ghost text-sm flex-1" style="min-width:80px;">ביטול</button>
+    </div>
+  </div>
+</div>
+
+<style>
+  .crop-handle {
+    position:absolute;
+    width:14px; height:14px;
+    background:var(--teal);
+    border:2px solid #001318;
+    border-radius:50%;
+    z-index:2;
+  }
+</style>
+
+<div class="app-shell">
+
+  <!-- ====================== LOGIN SCREEN ====================== -->
+  <section id="screen-login" class="screen min-h-screen flex flex-col items-center justify-center px-4">
+    <div class="w-full max-w-md anim-fade">
+      <div class="text-center mb-10">
+        <div class="flex justify-center mb-4">
+          <!-- Official DCG Logo (turquoise letters + white slogan, from BrandBook 2024) -->
+          <svg class="dcg-logo dcg-logo-large" viewBox="0 0 1086 500"
+               style="width: 100%; max-width: 320px; height: auto;">
+            <use href="#dcg-full"/>
+          </svg>
+        </div>
+        <h1 class="text-3xl mt-6 brand-title">פורטל דוחות עובדים</h1>
+        <p class="text-sm text-gray-400 mt-2 tracking-widest" style="font-family: var(--font-headline); letter-spacing: 0.4em;">DCG TECH LTD &middot; INTERNAL SYSTEM</p>
+      </div>
+
+      <div class="dcg-card p-7">
+
+        <!-- ── STATE A: Employee selection ── -->
+        <div id="loginSelectArea">
+          <h2 class="text-lg font-bold mb-1 section-title">כניסה למערכת</h2>
+          <p class="text-sm text-gray-400 mb-5 mt-3">בחר את שמך מהרשימה</p>
+          <div id="employeeGrid" class="grid grid-cols-3 gap-2">
+            <!-- populated dynamically by initLogin() -->
+          </div>
+        </div>
+
+        <!-- ── STATE B: Gmail verification ── -->
+        <div id="loginGmailArea" class="hidden">
+          <div class="flex flex-col items-center mb-6">
+            <div style="width:64px;height:64px;background:rgba(61,183,186,0.12);border:2px solid var(--teal);border-radius:50%;display:flex;align-items:center;justify-content:center;margin-bottom:12px;font-size:28px;">
+              👤
+            </div>
+            <p class="text-sm text-gray-400">שלום,</p>
+            <p id="gmailLoginName" class="text-2xl font-bold" style="color:var(--teal);font-family:var(--font-headline);letter-spacing:.05em;"></p>
+          </div>
+
+          <label class="block text-sm text-gray-300 mb-2">הכנס את כתובת ה-Gmail שלך לאימות</label>
+          <input type="email" id="gmailInput" inputmode="email" autocomplete="email"
+            placeholder="your@gmail.com" dir="ltr"
+            style="text-align:left; letter-spacing:.02em; width:100%; padding:12px 14px; font-size:16px; border-radius:10px; border:1px solid var(--border-soft); background:#0d0d18; color:#ffffff;" />
+
+          <button id="btnGmailLogin" class="btn-primary w-full py-3 mt-4">כניסה ←</button>
+          <button id="btnSwitchToSelect" class="btn-ghost w-full text-sm mt-3" style="color:var(--text-secondary);">
+            ← חזרה לרשימת עובדים
+          </button>
+        </div>
+
+        <!-- shared: error + spinner -->
+        <p id="loginError" class="text-red-400 text-center mt-3 hidden" style="font-size:13px;"></p>
+        <div id="loginSpinner" class="text-center mt-3 hidden">
+          <div class="inline-block w-6 h-6 border-2 border-teal-400 border-t-transparent rounded-full animate-spin"></div>
+          <p class="text-xs text-gray-400 mt-2">מאמת...</p>
+        </div>
+      </div>
+
+      <p class="text-center text-xs text-gray-600 mt-6 tagline">SECURE EVERY ANGLE</p>
+    </div>
+  </section>
+
+  <!-- ====================== APP HEADER (shared across post-login screens) ====================== -->
+  <header id="appHeader" class="hidden sticky top-0 z-30 backdrop-blur bg-black/60 border-b border-white/5">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <!-- Official DCG Logo (smaller, header) -->
+        <svg class="dcg-logo dcg-logo-small" width="150" height="46" viewBox="0 0 1086 350">
+          <use href="#dcg-full"/>
+        </svg>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-gray-300 hidden sm:inline">שלום, <span id="headerName" class="font-semibold text-white"></span></span>
+        <button id="btnLogout" class="btn-ghost text-sm" style="padding: 6px 14px;">יציאה</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ====================== DASHBOARD ====================== -->
+  <section id="screen-dashboard" class="screen hidden max-w-6xl mx-auto px-4 py-10">
+    <div class="anim-fade">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-8">
+        <div>
+          <h1 class="text-3xl font-bold">שלום, <span id="dashName" class="text-cyan-300"></span></h1>
+          <p class="text-gray-400 mt-1">בחר את הדוח שברצונך להגיש החודש</p>
+        </div>
+        <span class="badge badge-sent">חודש פעיל: <span id="dashCurrentMonth"></span></span>
+      </div>
+
+      <div class="grid md:grid-cols-3 gap-5 mb-10">
+        <button class="dcg-card p-6 text-right cursor-pointer" data-go="screen-attendance">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-3xl">📋</span>
+            <span class="text-xs text-cyan-400 tracking-widest">ATTENDANCE</span>
+          </div>
+          <h3 class="text-lg font-bold mb-1">דוח נוכחות</h3>
+          <p class="text-sm text-gray-400">דיווח שעות עבודה, ימי חופשה וימי מחלה לחודש שנבחר</p>
+        </button>
+
+        <button class="dcg-card p-6 text-right cursor-pointer" data-go="screen-expense">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-3xl">💰</span>
+            <span class="text-xs text-cyan-400 tracking-widest">EXPENSES</span>
+          </div>
+          <h3 class="text-lg font-bold mb-1">דוח החזר הוצאות</h3>
+          <p class="text-sm text-gray-400">הזנת הוצאות, צילום חשבוניות וחתימה דיגיטלית</p>
+        </button>
+
+        <button class="dcg-card p-6 text-right cursor-pointer" data-go="screen-travel">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-3xl">✈️</span>
+            <span class="text-xs text-cyan-400 tracking-widest">TRAVEL</span>
+          </div>
+          <h3 class="text-lg font-bold mb-1">דוח נסיעה לחו״ל</h3>
+          <p class="text-sm text-gray-400">פירוט הוצאות נסיעה, צילום קבלות והמרת מטבעות</p>
+        </button>
+      </div>
+
+      <div class="dcg-card p-6">
+        <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+          <h3 class="font-bold text-lg section-title">היסטוריית דוחות</h3>
+          <span class="text-xs text-gray-500">מציג רק את הדוחות שלך</span>
+        </div>
+        <p class="text-xs text-gray-400 mt-3 mb-4">
+          💡 <span style="color: var(--teal);">טיפ:</span> כל דוח שנשלח ניתן לעריכה — לחץ
+          <span style="color: var(--teal); font-weight: 600;">"ערוך ותקן"</span> כדי לטעון אותו לתיקון, או
+          <span style="color: var(--teal); font-weight: 600;">"שלח שוב"</span> כדי לייצר ולשלוח Excel חדש מאותם נתונים.
+        </p>
+        <div id="historyList" class="space-y-2"></div>
+      </div>
+
+      <p class="text-center text-xs text-gray-600 mt-10 tagline">SECURE EVERY ANGLE</p>
+    </div>
+  </section>
+
+  <!-- ====================== ATTENDANCE FORM ====================== -->
+  <section id="screen-attendance" class="screen hidden max-w-6xl mx-auto px-4 py-8">
+    <div class="anim-fade">
+      <div class="flex items-center gap-3 mb-6 flex-wrap">
+        <button class="btn-ghost text-sm flex-shrink-0" style="padding: 6px 12px;" data-go="screen-dashboard">→ חזרה</button>
+        <h2 class="text-xl font-bold min-w-0">דוח נוכחות — <span id="attEmpName" class="text-cyan-300"></span></h2>
+      </div>
+
+      <div class="dcg-card p-5 mb-5">
+        <div class="grid sm:grid-cols-3 gap-4 items-end">
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">בחר חודש ושנה</label>
+            <input type="month" id="attMonth" />
+          </div>
+          <div class="sm:col-span-2 text-sm text-gray-400">
+            <p>הטבלה מתעדכנת אוטומטית לפי החודש שנבחר.<br />
+            שבת מסומנת כיום מנוחה · שישי מודגש כיום עבודה קצר · לא ניתן לסמן גם חופש וגם מחלה באותו יום.</p>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-xs text-gray-500 mb-2 sm:hidden">↔️ ניתן לגלול את הטבלה לצדדים</p>
+
+      <div class="dcg-card p-0 overflow-hidden">
+        <div class="scroll-x" style="max-height: 60vh; overflow-y: auto;">
+          <table class="dcg-table" id="attendanceTable">
+            <thead>
+              <tr>
+                <th style="width: 14%">תאריך</th>
+                <th style="width: 12%">יום בשבוע</th>
+                <th style="width: 24%">שעות עבודה</th>
+                <th style="width: 16%">יום חופש</th>
+                <th style="width: 16%">יום מחלה</th>
+                <th style="width: 18%">יום מילואים</th>
+              </tr>
+            </thead>
+            <tbody id="attendanceBody"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2">סה״כ:</td>
+                <td><span id="totHours">0</span> שעות</td>
+                <td><span id="totVacation">0</span> ימי חופשה</td>
+                <td><span id="totSick">0</span> ימי מחלה</td>
+                <td><span id="totReserve">0</span> ימי מילואים</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 mt-6">
+        <button class="btn-ghost flex-1" id="btnAttSaveDraft">💾 שמור טיוטה</button>
+        <button class="btn-primary flex-1 pulse-glow" id="btnAttSubmit">📤 <span class="hidden sm:inline">שלח דוח (ייצור Excel + שליחה במייל)</span><span class="sm:hidden">שלח דוח</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== EXPENSE FORM ====================== -->
+  <section id="screen-expense" class="screen hidden max-w-6xl mx-auto px-4 py-8">
+    <div class="anim-fade">
+      <div class="flex items-center gap-3 mb-6 flex-wrap">
+        <button class="btn-ghost text-sm flex-shrink-0" style="padding: 6px 12px;" data-go="screen-dashboard">→ חזרה</button>
+        <h2 class="text-xl font-bold min-w-0">דוח החזר הוצאות — <span class="text-cyan-300">DCG Tech Ltd</span></h2>
+      </div>
+
+      <div class="dcg-card p-5 mb-5">
+        <div class="grid sm:grid-cols-3 gap-4">
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">חודש שכר</label>
+            <input type="month" id="expMonth" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">שם עובד</label>
+            <input type="text" id="expName" readonly style="opacity: .85; cursor: not-allowed;" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">תפקיד</label>
+            <input type="text" id="expRole" placeholder="למשל: מנהל פרויקטים" />
+          </div>
+        </div>
+      </div>
+
+      <p class="text-xs text-gray-500 mb-2 sm:hidden">↔️ ניתן לגלול את הטבלה לצדדים</p>
+
+      <div class="dcg-card p-0 overflow-hidden mb-5">
+        <div class="scroll-x">
+          <table class="dcg-table" id="expenseTable">
+            <thead>
+              <tr>
+                <th style="width: 14%">תאריך</th>
+                <th style="width: 36%">הוצאה + פירוט</th>
+                <th style="width: 14%">סכום (₪)</th>
+                <th style="width: 16%">מס׳ חשבונית</th>
+                <th style="width: 16%">קבלה</th>
+                <th style="width: 4%"></th>
+              </tr>
+            </thead>
+            <tbody id="expenseBody"></tbody>
+            <tfoot>
+              <tr>
+                <td colspan="2">סה״כ להחזר:</td>
+                <td colspan="4">₪<span id="totExpense">0.00</span></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+        <div class="p-3 bg-black/30 border-t border-white/5">
+          <button id="btnAddExpenseRow" class="btn-ghost text-sm">+ הוסף שורה</button>
+          <span class="text-xs text-gray-500 mr-3">מקסימום 17 שורות</span>
+        </div>
+      </div>
+
+      <div class="dcg-card p-5 mb-5">
+        <h3 class="font-bold mb-3 section-title">חתימת העובד</h3>
+        <p class="text-xs text-gray-500 mt-3 mb-3">חתום בעזרת העכבר או האצבע (במכשיר נייד)</p>
+        <canvas id="signaturePad"></canvas>
+        <div class="flex gap-2 mt-3">
+          <button class="btn-ghost text-sm" id="btnClearSig">🗑️ נקה חתימה</button>
+          <span class="text-xs text-gray-500 self-center">תאריך הגשה: <span id="expSubmitDate"></span></span>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button class="btn-ghost flex-1" id="btnExpSaveDraft">💾 שמור טיוטה</button>
+        <button class="btn-primary flex-1 pulse-glow" id="btnExpSubmit">📤 <span class="hidden sm:inline">שלח דוח (ייצור Excel + שליחה במייל)</span><span class="sm:hidden">שלח דוח</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== TRAVEL EXPENSE FORM ====================== -->
+  <section id="screen-travel" class="screen hidden max-w-6xl mx-auto px-4 py-8">
+    <div class="anim-fade">
+      <div class="flex items-center gap-3 mb-6 flex-wrap">
+        <button class="btn-ghost text-sm flex-shrink-0" style="padding: 6px 12px;" data-go="screen-dashboard">→ חזרה</button>
+        <h2 class="text-xl font-bold min-w-0">דוח נסיעה לחו״ל — <span id="trvEmpName" class="text-cyan-300"></span></h2>
+      </div>
+
+      <!-- Trip Header -->
+      <div class="dcg-card p-5 mb-5">
+        <h3 class="font-bold mb-4 section-title">פרטי הנסיעה</h3>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-3">
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">יעד</label>
+            <input type="text" id="trvDest" placeholder="למשל: סלובקיה" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">מטרת הנסיעה</label>
+            <input type="text" id="trvPurpose" placeholder="עסקים / כנס / פגישות" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">מטבע נסיעה</label>
+            <select id="trvCurrency">
+              <option value="EUR">€ Euro (יורו)</option>
+              <option value="USD">$ Dollar (דולר)</option>
+              <option value="GBP">£ Pound (לירה שטרלינג)</option>
+              <option value="CHF">CHF (פרנק שוויצרי)</option>
+              <option value="OTHER">אחר</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">תאריך יציאה + שעה</label>
+            <input type="datetime-local" id="trvDepart" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">תאריך חזרה + שעה</label>
+            <input type="datetime-local" id="trvReturn" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">מספר ימים</label>
+            <input type="number" id="trvDays" readonly style="opacity: .85; cursor: not-allowed;" />
+          </div>
+
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">תפקיד הנוסע</label>
+            <input type="text" id="trvRole" placeholder="למשל: מנהל מכירות" />
+          </div>
+          <div>
+            <label class="block text-sm text-gray-300 mb-2">נוסע נוסף (אופציונלי)</label>
+            <input type="text" id="trvCompanion" placeholder="שם + תפקיד" />
+          </div>
+        </div>
+
+        <!-- Per-currency exchange rates -->
+        <div class="mt-5 pt-5 border-t border-white/5">
+          <div class="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <h4 class="font-bold text-sm" style="color: var(--teal);">שערים יציגים — ₪ לכל יחידה במטבע</h4>
+            <span class="text-xs text-gray-500">הזן את השער שהיה ביום ביצוע ההוצאה. ההמרה לש״ח תתבצע אוטומטית בכל שורה לפי המטבע שלה.</span>
+          </div>
+          <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">€ EUR</label>
+              <input type="number" step="0.0001" id="trvRate-EUR" placeholder="3.70" />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">$ USD</label>
+              <input type="number" step="0.0001" id="trvRate-USD" placeholder="3.50" />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">£ GBP</label>
+              <input type="number" step="0.0001" id="trvRate-GBP" placeholder="4.40" />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">CHF</label>
+              <input type="number" step="0.0001" id="trvRate-CHF" placeholder="4.00" />
+            </div>
+            <div>
+              <label class="block text-xs text-gray-400 mb-1">מטבע אחר</label>
+              <input type="number" step="0.0001" id="trvRate-OTHER" placeholder="—" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detailed expenses -->
+      <div class="dcg-card p-0 overflow-hidden mb-5">
+        <div class="p-4 border-b border-white/5 flex items-center justify-between">
+          <h3 class="font-bold section-title">פירוט הוצאות (שורה לכל קבלה)</h3>
+          <span class="text-xs text-gray-500">סה״כ בש״ח: ₪<span id="trvTotalILS">0.00</span></span>
+        </div>
+        <div class="scroll-x" data-mobile-hint="↔️ ניתן לגלול את הטבלה לצדדים">
+          <table class="dcg-table" id="travelTable">
+            <thead>
+              <tr>
+                <th style="width: 4%">מס׳</th>
+                <th style="width: 16%">סיווג הוצאה</th>
+                <th style="width: 12%">סכום במט״ח</th>
+                <th style="width: 8%">מטבע</th>
+                <th style="width: 10%">סכום בש״ח</th>
+                <th style="width: 18%">הערות</th>
+                <th style="width: 28%">קבלה</th>
+                <th style="width: 4%"></th>
+              </tr>
+            </thead>
+            <tbody id="travelBody"></tbody>
+          </table>
+        </div>
+        <div class="p-3 bg-black/30 border-t border-white/5">
+          <button id="btnAddTravelRow" class="btn-ghost text-sm">+ הוסף שורת הוצאה</button>
+          <span class="text-xs text-gray-500 mr-3">ניתן לצרף תמונה (גלריה או מצלמה ישירות) או PDF לכל קבלה</span>
+        </div>
+      </div>
+
+      <!-- Category summary -->
+      <div class="dcg-card p-5 mb-5">
+        <h3 class="font-bold mb-3 section-title">סיכום הוצאות לפי קטגוריה</h3>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mt-3 text-sm">
+          <div class="dcg-card-static p-3"><div class="text-gray-400 text-xs">✈️ הוצאות טיסה</div><div class="text-cyan-300 font-bold mt-1">₪<span id="catFlight">0.00</span></div></div>
+          <div class="dcg-card-static p-3"><div class="text-gray-400 text-xs">🏨 הוצאות לינה</div><div class="text-cyan-300 font-bold mt-1">₪<span id="catLodging">0.00</span></div></div>
+          <div class="dcg-card-static p-3"><div class="text-gray-400 text-xs">🍽️ אש״ל / ארוחות</div><div class="text-cyan-300 font-bold mt-1">₪<span id="catMeals">0.00</span></div></div>
+          <div class="dcg-card-static p-3"><div class="text-gray-400 text-xs">🚗 רכב / נסיעות</div><div class="text-cyan-300 font-bold mt-1">₪<span id="catTransport">0.00</span></div></div>
+          <div class="dcg-card-static p-3"><div class="text-gray-400 text-xs">🧾 שונות</div><div class="text-cyan-300 font-bold mt-1">₪<span id="catOther">0.00</span></div></div>
+        </div>
+      </div>
+
+      <!-- Signature -->
+      <div class="dcg-card p-5 mb-5">
+        <h3 class="font-bold mb-3 section-title">חתימת העובד</h3>
+        <p class="text-xs text-gray-500 mt-3 mb-3">חתום בעזרת העכבר או האצבע (במכשיר נייד)</p>
+        <canvas id="trvSignaturePad"></canvas>
+        <div class="flex gap-2 mt-3">
+          <button class="btn-ghost text-sm" id="btnTrvClearSig">🗑️ נקה חתימה</button>
+          <span class="text-xs text-gray-500 self-center">תאריך הגשה: <span id="trvSubmitDate"></span></span>
+        </div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3">
+        <button class="btn-ghost flex-1" id="btnTrvSaveDraft">💾 שמור טיוטה</button>
+        <button class="btn-primary flex-1 pulse-glow" id="btnTrvSubmit">📤 <span class="hidden sm:inline">שלח דוח (ייצור Excel + שליחה במייל)</span><span class="sm:hidden">שלח דוח</span></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ====================== CONFIRMATION ====================== -->
+  <section id="screen-confirm" class="screen hidden max-w-3xl mx-auto px-4 py-12">
+    <div class="anim-fade text-center">
+      <div class="flex justify-center mb-6">
+        <svg class="check-anim" width="120" height="120" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r="45" fill="none" stroke="#3DB7BA" stroke-width="3"/>
+          <path d="M30 52 L46 68 L72 38" fill="none" stroke="#3DB7BA" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <h2 class="text-3xl font-bold mb-2">הדוח נשלח בהצלחה!</h2>
+      <p class="text-gray-400 mb-8">קובץ ה-Excel נוצר ונשלח למייל <span class="text-cyan-300">einav@dcg-tech.com</span></p>
+
+      <div class="dcg-card p-6 text-right mb-6">
+        <h3 class="font-bold mb-3 section-title">סיכום הדוח</h3>
+        <div id="confirmSummary" class="text-sm text-gray-300 space-y-1 mt-3"></div>
+      </div>
+
+      <div class="flex flex-col sm:flex-row gap-3 justify-center">
+        <button class="btn-ghost" id="btnDownloadCopy">⬇️ הורד העתק</button>
+        <button class="btn-primary" data-go="screen-dashboard">🏠 חזרה לדף הבית</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* =========================================================
+   DCG TECH PORTAL — Prototype Logic
+   ========================================================= */
+
+const EMPLOYEES = ["Rony","Einav","Itzik","Asher","Hagay","Ohad","Shlomi","Daniel","Assaf","Benny","Shay","Hadar"];
+
+// Gmail address for each employee — used to verify identity at login
+const EMPLOYEE_GMAIL = {
+  'Rony':   'ronygilman1@gmail.com',
+  'Einav':  'einav.shachar@gmail.com',
+  'Itzik':  'itsikweiz@gmail.com',
+  'Asher':  'asher.peretz11@gmail.com',
+  'Hagay':  'hagaya1986@gmail.com',
+  'Ohad':   'ohad.nir@gmail.com',
+  'Shlomi': 'shlomiss313@gmail.com',
+  'Daniel': 'hozzney@gmail.com',
+  'Assaf':  'shaba.asaf@gmail.com',
+  'Benny':  'benny.tomer@gmail.com',
+  'Shay':   'akiva.shay@gmail.com',
+  'Hadar':  'hadarsz@gmail.com',
+};
+
+/* =====================================================================
+   AUTHENTICATION — Employee selection + Gmail verification
+   ===================================================================== */
+
+/* ---------------------------------------------------------------
+   EMPLOYEE SELECTION
+--------------------------------------------------------------- */
+function showEmployeeSelect() {
+  $('#loginSelectArea').classList.remove('hidden');
+  $('#loginGmailArea').classList.add('hidden');
+  const errEl = $('#loginError');
+  if (errEl) errEl.classList.add('hidden');
+}
+
+function showGmailView(empName) {
+  $('#loginSelectArea').classList.add('hidden');
+  $('#loginGmailArea').classList.remove('hidden');
+  $('#gmailLoginName').textContent = empName;
+  $('#gmailInput').value = '';
+  const errEl = $('#loginError');
+  if (errEl) errEl.classList.add('hidden');
+  setTimeout(() => { const el = $('#gmailInput'); if (el) el.focus(); }, 200);
+}
+
+function selectEmployee(empName) {
+  showGmailView(empName);
+}
+
+function gmailLogin() {
+  const empName = $('#gmailLoginName').textContent.trim();
+  if (!empName) return;
+  const entered = $('#gmailInput').value.trim().toLowerCase();
+  const expected = (EMPLOYEE_GMAIL[empName] || '').toLowerCase();
+  if (!entered) {
+    showLoginError('אנא הכנס את כתובת ה-Gmail שלך.');
+    return;
+  }
+  if (entered !== expected) {
+    showLoginError('כתובת Gmail שגויה. נסה שוב.');
+    $('#gmailInput').value = '';
+    $('#gmailInput').focus();
+    return;
+  }
+  $('#loginError').classList.add('hidden');
+  _completeLogin(empName);
+}
+
+function showLoginError(msg) {
+  const el = $('#loginError');
+  if (!el) return;
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  $('#loginSpinner').classList.add('hidden');
+}
+
+function _completeLogin(empName) {
+  App.currentEmployee = empName;
+  App.sessionStartedAt = Date.now();
+  $('#headerName').textContent = empName;
+  $('#dashName').textContent = empName;
+  if ($('#expName')) $('#expName').value = empName;
+  if ($('#attEmpName')) $('#attEmpName').textContent = empName;
+  $('#dashCurrentMonth').textContent = fmtMonthLabel(currentMonthYYYY_MM());
+  showScreen('screen-dashboard');
+  startIdleTimer();
+}
+const HEBREW_DAYS = ["ראשון","שני","שלישי","רביעי","חמישי","שישי","שבת"];
+const ENG_MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const HEB_MONTHS = ["ינואר","פברואר","מרץ","אפריל","מאי","יוני","יולי","אוגוסט","ספטמבר","אוקטובר","נובמבר","דצמבר"];
+
+/* ---------- Storage layer (simulating Supabase) ----------
+   With safe fallback to in-memory store if localStorage is blocked
+   (e.g. when opening the file via file:// in some browsers, or in
+   private browsing mode). */
+const _memStore = {};
+function _lsAvailable() {
+  try {
+    const k = '__dcg_test__';
+    localStorage.setItem(k, '1');
+    localStorage.removeItem(k);
+    return true;
+  } catch (e) { return false; }
+}
+const HAS_LS = _lsAvailable();
+function _set(key, val) {
+  if (HAS_LS) { try { localStorage.setItem(key, val); return; } catch(e){} }
+  _memStore[key] = val;
+}
+function _get(key) {
+  if (HAS_LS) { try { return localStorage.getItem(key); } catch(e){} }
+  return Object.prototype.hasOwnProperty.call(_memStore, key) ? _memStore[key] : null;
+}
+
+const Store = {
+  draftKey: (emp, type, month) => `dcg.draft.${emp}.${type}.${month}`,
+  historyKey: emp => `dcg.history.${emp}`,
+  saveDraft(emp, type, month, data) {
+    _set(this.draftKey(emp,type,month), JSON.stringify({...data, savedAt: new Date().toISOString()}));
+  },
+  loadDraft(emp, type, month) {
+    try { const raw = _get(this.draftKey(emp,type,month)); return raw ? JSON.parse(raw) : null; } catch(e){ return null; }
+  },
+  appendHistory(emp, entry) {
+    try {
+      const raw = _get(this.historyKey(emp));
+      const arr = raw ? JSON.parse(raw) : [];
+      arr.unshift(entry);
+      _set(this.historyKey(emp), JSON.stringify(arr.slice(0, 50)));
+    } catch(e){}
+  },
+  getHistory(emp) {
+    try { const raw = _get(this.historyKey(emp)); return raw ? JSON.parse(raw) : []; } catch(e){ return []; }
+  }
+};
+
+/* ---------- App state ---------- */
+const App = {
+  currentEmployee: null,
+  attendanceMonth: null, // "YYYY-MM"
+  expenseMonth: null,
+  attendanceData: {}, // index -> {hours, vacation, sick}
+  expenseRows: [],    // {date, desc, amount, invoice, receipts: [{name, dataUrl}]}
+  signatureData: null,
+};
+
+/* ---------- DOM helpers ---------- */
+const $ = sel => document.querySelector(sel);
+const $$ = sel => document.querySelectorAll(sel);
+
+function showScreen(id) {
+  $$('.screen').forEach(s => s.classList.add('hidden'));
+  const target = document.getElementById(id);
+  if (target) target.classList.remove('hidden');
+  const showHeader = id !== 'screen-login';
+  $('#appHeader').classList.toggle('hidden', !showHeader);
+  if (id === 'screen-dashboard') refreshDashboard();
+  if (id === 'screen-attendance') initAttendance();
+  if (id === 'screen-expense') initExpense();
+  if (id === 'screen-travel') initTravel();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function toast(msg, kind='info', ms=3000) {
+  const el = document.createElement('div');
+  el.className = `toast ${kind}`;
+  el.textContent = msg;
+  $('#toastContainer').appendChild(el);
+  setTimeout(() => { el.style.opacity = '0'; el.style.transition='opacity .3s'; setTimeout(()=>el.remove(), 300); }, ms);
+}
+
+function fmtMonthLabel(yyyy_mm) {
+  if (!yyyy_mm) return '';
+  const [y,m] = yyyy_mm.split('-').map(Number);
+  return `${HEB_MONTHS[m-1]} ${y}`;
+}
+function fmtMonthEnglish(yyyy_mm) {
+  if (!yyyy_mm) return '';
+  const [y,m] = yyyy_mm.split('-').map(Number);
+  return `${ENG_MONTHS[m-1]}_${y}`;
+}
+function fmtDDMMYYYY(d) {
+  const dd = String(d.getDate()).padStart(2,'0');
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  return `${dd}/${mm}/${d.getFullYear()}`;
+}
+
+function currentMonthYYYY_MM() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+
+/* ---------- Login — Gmail verification ---------- */
+function initLogin() {
+  // ── Build employee selection grid ──
+  const grid = $('#employeeGrid');
+  EMPLOYEES.forEach(name => {
+    const btn = document.createElement('button');
+    btn.className = 'employee-btn';
+    btn.textContent = name;
+    btn.addEventListener('click', () => selectEmployee(name));
+    grid.appendChild(btn);
+  });
+
+  // ── Back button in Gmail view ──
+  $('#btnSwitchToSelect').addEventListener('click', showEmployeeSelect);
+
+  // ── Gmail submit button ──
+  $('#btnGmailLogin').addEventListener('click', gmailLogin);
+
+  // ── Allow Enter key in Gmail input ──
+  $('#gmailInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') gmailLogin();
+  });
+}
+
+/* ---------- Idle / session timeout ---------- */
+const IDLE_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes
+let _idleTimer = null;
+function startIdleTimer() {
+  resetIdleTimer();
+  ['click','keydown','mousemove','touchstart','scroll'].forEach(evt =>
+    document.addEventListener(evt, resetIdleTimer, { passive: true })
+  );
+}
+function resetIdleTimer() {
+  if (!App.currentEmployee) return;
+  clearTimeout(_idleTimer);
+  _idleTimer = setTimeout(() => {
+    if (!App.currentEmployee) return;
+    toast('הסשן הסתיים עקב חוסר פעילות. אנא היכנס שוב.', 'error', 5000);
+    forceLogout();
+  }, IDLE_TIMEOUT_MS);
+}
+function forceLogout() {
+  App.currentEmployee = null;
+  App.attendanceData = {};
+  App.expenseRows = [];
+  App.signatureData = null;
+  App.travelData = { dest: '', purpose: '', currency: 'EUR', rates: {EUR:'',USD:'',GBP:'',CHF:'',OTHER:''}, depart:'', return:'', days:'', role:'', companion:'', rows: [] };
+  App.trvSignatureData = null;
+  clearTimeout(_idleTimer);
+  showScreen('screen-login');
+  showEmployeeSelect();
+}
+
+/* ---------- Dashboard ---------- */
+function refreshDashboard() {
+  const list = $('#historyList');
+  const items = Store.getHistory(App.currentEmployee);
+  if (!items.length) {
+    list.innerHTML = `<div class="text-sm text-gray-500 py-6 text-center">אין דוחות בהיסטוריה עדיין. הגש את הדוח הראשון שלך! 🚀</div>`;
+    return;
+  }
+  list.innerHTML = items.map((it, idx) => {
+    const badge = it.status === 'submitted'
+      ? `<span class="badge badge-sent">נשלח</span>`
+      : it.status === 'resent'
+      ? `<span class="badge badge-sent">נשלח מחדש</span>`
+      : `<span class="badge badge-draft">טיוטה</span>`;
+    const icon = it.type === 'attendance' ? '📋' : (it.type === 'expense' ? '💰' : '✈️');
+    const typeLabel = it.type === 'attendance' ? 'דוח נוכחות'
+                    : it.type === 'expense'    ? 'דוח הוצאות'
+                    : 'דוח נסיעה לחו״ל';
+    const periodLabel = it.type === 'travel'
+      ? (it.dest ? `${it.dest} · ${(it.depart || '').slice(0,10)}` : 'נסיעה')
+      : fmtMonthLabel(it.month);
+
+    // Show edit/resend on every submitted/resent record. If the record has no saved
+    // payload (older entries from before payload was implemented), the handlers will
+    // gracefully explain and offer to navigate to the relevant form instead.
+    const isSubmitted = (it.status === 'submitted' || it.status === 'resent');
+    const noPayloadHint = isSubmitted && !it.payload ? ' title="רשומה ישנה — אין נתונים שמורים. הכפתור יפתח טופס ריק לעריכה ידנית."' : '';
+    // Use the array index as the click identifier (works for ALL entries, with or without an id field)
+    const actions = isSubmitted ? `
+      <div class="flex gap-2 flex-wrap" style="margin-top:6px;">
+        <button type="button" class="hist-edit" data-hidx="${idx}" ${noPayloadHint}
+          style="background:transparent;color:var(--teal);border:1px solid var(--border-strong);border-radius:8px;padding:8px 12px;font-weight:600;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:5px;transition:all .2s;flex:1;min-width:100px;justify-content:center;">
+          <span>✏️</span> ערוך
+        </button>
+        <button type="button" class="hist-resend" data-hidx="${idx}" ${noPayloadHint}
+          style="background:var(--teal);color:#001318;border:1px solid var(--teal);border-radius:8px;padding:8px 12px;font-weight:700;cursor:pointer;font-size:13px;display:inline-flex;align-items:center;gap:5px;transition:all .2s;flex:1;min-width:100px;justify-content:center;">
+          <span>📤</span> שלח שוב
+        </button>
+      </div>` : '';
+
+    return `
+      <div class="dcg-card-static p-4" style="${isSubmitted ? 'border-color: var(--border-strong);' : ''}">
+        <div class="flex items-center gap-3 min-w-0 mb-2">
+          <span class="text-2xl flex-shrink-0">${icon}</span>
+          <div class="min-w-0 flex-1">
+            <div class="font-semibold truncate text-sm">${typeLabel} · ${periodLabel}</div>
+            <div class="text-xs text-gray-500 mt-0.5">${new Date(it.at).toLocaleString('he-IL')}</div>
+          </div>
+          ${badge}
+        </div>
+        ${actions}
+      </div>`;
+  }).join('');
+
+  // Wire edit/resend buttons — use the array index (every entry has one)
+  list.querySelectorAll('.hist-edit').forEach(btn => btn.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    const idx = parseInt(e.currentTarget.dataset.hidx, 10);
+    console.log('[DCG] edit history idx=', idx);
+    editHistoryItem(idx);
+  }));
+  list.querySelectorAll('.hist-resend').forEach(btn => btn.addEventListener('click', e => {
+    e.preventDefault(); e.stopPropagation();
+    const idx = parseInt(e.currentTarget.dataset.hidx, 10);
+    console.log('[DCG] resend history idx=', idx);
+    resendHistoryItem(idx);
+  }));
+}
+
+function findHistoryItem(idx) {
+  const items = Store.getHistory(App.currentEmployee);
+  if (typeof idx !== 'number' || isNaN(idx)) return null;
+  return items[idx] || null;
+}
+
+function editHistoryItem(idx) {
+  try {
+    const it = findHistoryItem(idx);
+    if (!it) {
+      toast('שגיאה: לא נמצאה הרשומה (idx=' + idx + ')', 'error', 5000);
+      return;
+    }
+
+    // Always set the editing flag and navigate. If payload is missing, the form
+    // will open empty and the user can re-enter / continue from a draft.
+    App._editingHistoryId = idx;
+
+    if (it.type === 'attendance') {
+      App.attendanceMonth = it.month;
+      if (it.payload && it.payload.data) {
+        App.attendanceData = JSON.parse(JSON.stringify(it.payload.data));
+      } else {
+        // No saved payload — let initAttendance pick up any draft for this month
+        App._editingHistoryId = null;
+      }
+      showScreen('screen-attendance');
+    } else if (it.type === 'expense') {
+      App.expenseMonth = it.month;
+      if (it.payload) {
+        App.expenseRows = JSON.parse(JSON.stringify(it.payload.rows || []));
+        App.signatureData = it.payload.signature || null;
+        App._editingExpenseRole = it.payload.role || '';
+      } else {
+        App._editingHistoryId = null;
+      }
+      showScreen('screen-expense');
+      if (it.payload && $('#expRole')) $('#expRole').value = App._editingExpenseRole || '';
+    } else if (it.type === 'travel') {
+      if (it.payload && it.payload.data) {
+        App.travelData = JSON.parse(JSON.stringify(it.payload.data));
+        App.trvSignatureData = it.payload.signature || null;
+      } else {
+        App._editingHistoryId = null;
+      }
+      showScreen('screen-travel');
+    } else {
+      toast('סוג דוח לא מוכר: ' + it.type, 'error');
+      return;
+    }
+
+    if (it.payload) {
+      toast('הדוח נטען לעריכה — בצע שינויים ולחץ "שלח דוח"', 'info', 5000);
+    } else {
+      toast('זוהי רשומה ישנה — הטופס נפתח. תוכל למלא מחדש ולשלוח.', 'info', 6000);
+    }
+  } catch (err) {
+    console.error('editHistoryItem failed:', err);
+    toast('שגיאה בטעינת הדוח: ' + (err && err.message || err), 'error', 6000);
+  }
+}
+
+async function resendHistoryItem(idx) {
+  const it = findHistoryItem(idx);
+  if (!it) { toast('שגיאה: לא נמצאה הרשומה', 'error'); return; }
+  if (!it.payload) {
+    toast('רשומה ישנה — אין נתונים שמורים לייצור Excel. השתמש ב"ערוך ותקן" כדי לפתוח את הטופס.', 'error', 6500);
+    return;
+  }
+
+  const snapshot = {
+    attendanceMonth: App.attendanceMonth,
+    attendanceData: App.attendanceData,
+    expenseMonth: App.expenseMonth,
+    expenseRows: App.expenseRows,
+    signatureData: App.signatureData,
+    travelData: App.travelData,
+    trvSignatureData: App.trvSignatureData,
+  };
+
+  try {
+    let wb, fileName, subject, bodyText;
+
+    if (it.type === 'attendance') {
+      App.attendanceMonth = it.month;
+      App.attendanceData = it.payload.data || {};
+      wb = generateWorkbook();
+      fileName = generateFileName(App.attendanceMonth);
+      const monthLabel = fmtMonthLabel(it.month);
+      subject = `דוח חודשי - ${App.currentEmployee} - ${monthLabel}`;
+      bodyText = `שלום,\n\nמצורף דוח נוכחות של ${App.currentEmployee} לחודש ${monthLabel}.\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות`;
+    } else if (it.type === 'expense') {
+      App.expenseMonth = it.month;
+      App.expenseRows = it.payload.rows || [];
+      const roleField = $('#expRole');
+      const prevRole = roleField ? roleField.value : '';
+      if (roleField) roleField.value = it.payload.role || '';
+      wb = generateWorkbook();
+      fileName = generateFileName(App.expenseMonth);
+      const monthLabel = fmtMonthLabel(it.month);
+      const total = (it.payload.rows || []).reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
+      subject = `דוח חודשי - ${App.currentEmployee} - ${monthLabel}`;
+      bodyText = `שלום,\n\nמצורף דוח החזר הוצאות של ${App.currentEmployee} לחודש ${monthLabel}.\n\nסה"כ: ₪${total.toFixed(2)}\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות`;
+      if (roleField) roleField.value = prevRole;
+    } else if (it.type === 'travel') {
+      App.travelData = it.payload.data || {};
+      wb = generateTravelWorkbook();
+      fileName = generateTravelFileName();
+      subject = `דוח נסיעה - ${App.currentEmployee} - ${it.dest || ''} (${it.depart || ''})`;
+      bodyText = `שלום,\n\nמצורף דוח נסיעה של ${App.currentEmployee}.\n\nיעד: ${it.dest || '—'}\nתאריכי נסיעה: ${it.depart || '—'}\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות`;
+    }
+
+    XLSX.writeFile(wb, fileName);
+
+    try {
+      await sendReportEmail({ wb, fileName, subject, bodyText });
+      toast('📤 הדוח נשלח מחדש בהצלחה אל einav@dcg-tech.com', 'success');
+    } catch (emailErr) {
+      console.error('[Graph] resend email failed:', emailErr);
+      toast('⚠️ הקובץ הורד אך שליחת המייל נכשלה. שלח ידנית.', 'error', 7000);
+    }
+
+    Store.appendHistory(App.currentEmployee, {
+      id: 'r_' + Date.now() + '_' + Math.random().toString(36).slice(2,7),
+      type: it.type, month: it.month, dest: it.dest, depart: it.depart,
+      status: 'resent', at: new Date().toISOString(), payload: it.payload,
+    });
+    refreshDashboard();
+  } finally {
+    Object.assign(App, snapshot);
+  }
+}
+
+/* ---------- Attendance ---------- */
+function buildAttendanceRows(yyyy_mm) {
+  const [y,m] = yyyy_mm.split('-').map(Number);
+  const daysInMonth = new Date(y, m, 0).getDate();
+  const rows = [];
+  for (let d = 1; d <= daysInMonth; d++) {
+    const date = new Date(y, m-1, d);
+    rows.push({
+      date,
+      dayIndex: date.getDay(), // 0=Sunday(ראשון) ... 6=Saturday(שבת)
+    });
+  }
+  return rows;
+}
+
+function renderAttendanceTable() {
+  const month = App.attendanceMonth;
+  if (!month) return;
+  const rows = buildAttendanceRows(month);
+  const tbody = $('#attendanceBody');
+  tbody.innerHTML = '';
+
+  rows.forEach((r, idx) => {
+    const tr = document.createElement('tr');
+    const dayName = HEBREW_DAYS[r.dayIndex];
+    const isSat = r.dayIndex === 6;
+    const isFri = r.dayIndex === 5;
+    if (isSat) tr.classList.add('is-saturday');
+    if (isFri) tr.classList.add('is-friday');
+
+    const saved = App.attendanceData[idx] || { hours: '', vacation: false, sick: false, reserve: false };
+
+    tr.innerHTML = `
+      <td>${fmtDDMMYYYY(r.date)}</td>
+      <td>${dayName}${isSat ? ' (מנוחה)' : ''}${isFri ? ' (קצר)' : ''}</td>
+      <td>
+        <input type="number" min="0" max="24" step="0.5" value="${saved.hours}" data-idx="${idx}" class="att-hours" />
+      </td>
+      <td><input type="checkbox" class="dcg-check att-vac" data-idx="${idx}" ${saved.vacation ? 'checked' : ''}/></td>
+      <td><input type="checkbox" class="dcg-check att-sick" data-idx="${idx}" ${saved.sick ? 'checked' : ''}/></td>
+      <td><input type="checkbox" class="dcg-check att-reserve" data-idx="${idx}" ${saved.reserve ? 'checked' : ''}/></td>
+    `;
+    tbody.appendChild(tr);
+  });
+
+  // Wire up
+  tbody.querySelectorAll('.att-hours').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const idx = +e.target.dataset.idx;
+      App.attendanceData[idx] = App.attendanceData[idx] || {};
+      App.attendanceData[idx].hours = e.target.value;
+      updateAttendanceTotals();
+    });
+  });
+  // Helper: apply mutual-exclusivity between vacation/sick/reserve and disable hours input
+  function setExclusiveDayType(idx, type, checked, tr) {
+    App.attendanceData[idx] = App.attendanceData[idx] || {};
+    const others = ['vacation','sick','reserve'].filter(t => t !== type);
+    App.attendanceData[idx][type] = checked;
+    if (checked) {
+      // Uncheck other types
+      others.forEach(t => {
+        App.attendanceData[idx][t] = false;
+        const el = tr.querySelector(`.att-${t === 'vacation' ? 'vac' : t}`);
+        if (el) el.checked = false;
+      });
+      const hrs = tr.querySelector('.att-hours');
+      hrs.value = ''; hrs.disabled = true;
+      App.attendanceData[idx].hours = '';
+      tr.classList.remove('is-vacation','is-sick','is-reserve');
+      tr.classList.add(`is-${type}`);
+    } else {
+      tr.querySelector('.att-hours').disabled = false;
+      tr.classList.remove(`is-${type}`);
+    }
+    updateAttendanceTotals();
+  }
+
+  tbody.querySelectorAll('.att-vac').forEach(chk => chk.addEventListener('change', e => {
+    setExclusiveDayType(+e.target.dataset.idx, 'vacation', e.target.checked, e.target.closest('tr'));
+  }));
+  tbody.querySelectorAll('.att-sick').forEach(chk => chk.addEventListener('change', e => {
+    setExclusiveDayType(+e.target.dataset.idx, 'sick', e.target.checked, e.target.closest('tr'));
+  }));
+  tbody.querySelectorAll('.att-reserve').forEach(chk => chk.addEventListener('change', e => {
+    setExclusiveDayType(+e.target.dataset.idx, 'reserve', e.target.checked, e.target.closest('tr'));
+  }));
+
+  // Apply existing class state for loaded data
+  Object.entries(App.attendanceData).forEach(([idx, val]) => {
+    const tr = tbody.children[+idx];
+    if (!tr) return;
+    if (val.vacation) { tr.classList.add('is-vacation'); tr.querySelector('.att-hours').disabled = true; }
+    if (val.sick)     { tr.classList.add('is-sick');     tr.querySelector('.att-hours').disabled = true; }
+    if (val.reserve)  { tr.classList.add('is-reserve');  tr.querySelector('.att-hours').disabled = true; }
+  });
+
+  updateAttendanceTotals();
+}
+
+function updateAttendanceTotals() {
+  let hours = 0, vac = 0, sick = 0, reserve = 0;
+  Object.values(App.attendanceData).forEach(d => {
+    if (d.vacation) vac++;
+    else if (d.sick) sick++;
+    else if (d.reserve) reserve++;
+    else if (d.hours && !isNaN(parseFloat(d.hours))) hours += parseFloat(d.hours);
+  });
+  $('#totHours').textContent = (Math.round(hours*10)/10).toString();
+  $('#totVacation').textContent = vac;
+  $('#totSick').textContent = sick;
+  $('#totReserve').textContent = reserve;
+}
+
+
+function initAttendance() {
+  if (!App.attendanceMonth) App.attendanceMonth = currentMonthYYYY_MM();
+  $('#attMonth').value = App.attendanceMonth;
+
+  // If we arrived here via "edit from history", keep the loaded data; otherwise pull a draft
+  if (App._editingHistoryId === null || App._editingHistoryId === undefined) {
+    const draft = Store.loadDraft(App.currentEmployee, 'attendance', App.attendanceMonth);
+    App.attendanceData = (draft && draft.data) ? draft.data : {};
+    if (draft) toast(`טיוטה נטענה (${new Date(draft.savedAt).toLocaleString('he-IL')})`, 'info');
+  }
+  renderAttendanceTable();
+}
+
+/* ---------- Expense ---------- */
+function renderExpenseTable() {
+  const tbody = $('#expenseBody');
+  tbody.innerHTML = '';
+  if (App.expenseRows.length === 0) {
+    for (let i=0;i<3;i++) App.expenseRows.push({date:'', desc:'', amount:'', invoice:'', receipts:[]});
+  }
+  App.expenseRows.forEach((row, idx) => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><input type="date" class="exp-date" data-idx="${idx}" value="${row.date||''}" /></td>
+      <td><input type="text" class="exp-desc" data-idx="${idx}" value="${(row.desc||'').replace(/"/g,'&quot;')}" placeholder="לדוגמה: דלק לכביש 6" /></td>
+      <td><input type="number" min="0" step="0.01" class="exp-amount" data-idx="${idx}" value="${row.amount||''}" /></td>
+      <td><input type="text" class="exp-invoice" data-idx="${idx}" value="${(row.invoice||'').replace(/"/g,'&quot;')}" /></td>
+      <td>
+        <div class="flex flex-wrap gap-1">
+          <label class="btn-ghost text-xs cursor-pointer" style="padding:6px 10px; display:inline-block;">
+            📷 צלם
+            <input type="file" class="exp-file hidden" data-idx="${idx}" accept="image/*" capture="environment" />
+          </label>
+          <label class="btn-ghost text-xs cursor-pointer" style="padding:6px 10px; display:inline-block;">
+            📎 העלה
+            <input type="file" class="exp-file hidden" data-idx="${idx}" accept="image/*,application/pdf" multiple />
+          </label>
+        </div>
+        <div class="mt-2" id="exp-receipts-${idx}"></div>
+      </td>
+      <td>
+        <button class="btn-danger-ghost exp-del" data-idx="${idx}" title="מחק שורה">✕</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+    renderReceipts(idx);
+  });
+
+  tbody.querySelectorAll('.exp-date').forEach(i => i.addEventListener('input', e => {
+    App.expenseRows[+e.target.dataset.idx].date = e.target.value;
+  }));
+  tbody.querySelectorAll('.exp-desc').forEach(i => i.addEventListener('input', e => {
+    App.expenseRows[+e.target.dataset.idx].desc = e.target.value;
+  }));
+  tbody.querySelectorAll('.exp-amount').forEach(i => i.addEventListener('input', e => {
+    App.expenseRows[+e.target.dataset.idx].amount = e.target.value;
+    updateExpenseTotal();
+  }));
+  tbody.querySelectorAll('.exp-invoice').forEach(i => i.addEventListener('input', e => {
+    App.expenseRows[+e.target.dataset.idx].invoice = e.target.value;
+  }));
+  tbody.querySelectorAll('.exp-file').forEach(i => i.addEventListener('change', e => {
+    const idx = +e.target.dataset.idx;
+    Array.from(e.target.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        App.expenseRows[idx].receipts.push({ name: file.name, dataUrl: reader.result, type: file.type });
+        renderReceipts(idx);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  }));
+  tbody.querySelectorAll('.exp-del').forEach(b => b.addEventListener('click', e => {
+    const idx = +e.target.dataset.idx;
+    App.expenseRows.splice(idx, 1);
+    if (App.expenseRows.length === 0) App.expenseRows.push({date:'', desc:'', amount:'', invoice:'', receipts:[]});
+    renderExpenseTable();
+    updateExpenseTotal();
+  }));
+
+  updateExpenseTotal();
+}
+
+function renderReceipts(idx) {
+  const el = document.getElementById(`exp-receipts-${idx}`);
+  if (!el) return;
+  const r = App.expenseRows[idx].receipts || [];
+  if (r.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = r.map((rec, ri) => {
+    const isImg = (rec.type || '').startsWith('image/');
+    const preview = isImg
+      ? `<img src="${rec.dataUrl}" style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border-soft); cursor:pointer;" data-view="${idx}-${ri}" alt=""/>`
+      : `<span style="cursor:pointer; font-size:18px;" data-view="${idx}-${ri}">📄</span>`;
+    const shortName = rec.name.length > 14 ? rec.name.slice(0,12)+'…' : rec.name;
+    return `<span class="receipt-chip" title="לחץ לצפייה — ${rec.name}">${preview} <span style="cursor:pointer;" data-view="${idx}-${ri}">${shortName}</span> <button data-rcp="${idx}-${ri}" title="מחק">✕</button></span>`;
+  }).join('');
+  // View on click (image thumbnail OR name)
+  el.querySelectorAll('[data-view]').forEach(t => t.addEventListener('click', e => {
+    e.stopPropagation();
+    const [i, ri] = e.currentTarget.dataset.view.split('-').map(Number);
+    ReceiptViewer.open('expense', i, ri);
+  }));
+  el.querySelectorAll('button[data-rcp]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const [i, ri] = e.target.dataset.rcp.split('-').map(Number);
+    App.expenseRows[i].receipts.splice(ri, 1);
+    renderReceipts(i);
+  }));
+}
+
+function updateExpenseTotal() {
+  const total = App.expenseRows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+  $('#totExpense').textContent = total.toFixed(2);
+}
+
+function initExpense() {
+  if (!App.expenseMonth) App.expenseMonth = currentMonthYYYY_MM();
+  $('#expMonth').value = App.expenseMonth;
+  $('#expName').value = App.currentEmployee;
+  $('#expSubmitDate').textContent = fmtDDMMYYYY(new Date());
+
+  if (App._editingHistoryId !== null && App._editingHistoryId !== undefined) {
+    // Data already populated by editHistoryItem — just sync the role field
+    if (App._editingExpenseRole != null) $('#expRole').value = App._editingExpenseRole;
+    if (App.signatureData) drawSavedSignature();
+  } else {
+    const draft = Store.loadDraft(App.currentEmployee, 'expense', App.expenseMonth);
+    if (draft && draft.data) {
+      App.expenseRows = draft.data.rows || [];
+      $('#expRole').value = draft.data.role || '';
+      App.signatureData = draft.data.signature || null;
+      if (App.signatureData) drawSavedSignature();
+      toast(`טיוטה נטענה (${new Date(draft.savedAt).toLocaleString('he-IL')})`, 'info');
+    } else {
+      App.expenseRows = [];
+    }
+  }
+  renderExpenseTable();
+  resizeSignaturePad();
+}
+
+/* ---------- Travel Expense Report ---------- */
+const TRV_CATEGORIES = [
+  { value: 'flight',    label: '✈️ הוצאות טיסה' },
+  { value: 'lodging',   label: '🏨 הוצאות לינה' },
+  { value: 'meals',     label: '🍽️ אש״ל / ארוחות' },
+  { value: 'transport', label: '🚗 רכב / נסיעות' },
+  { value: 'other',     label: '🧾 שונות' },
+];
+const CURRENCY_SYMBOLS = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF', OTHER: '' };
+
+App.travelData = {
+  dest: '', purpose: '', currency: 'EUR',
+  rates: { EUR: '', USD: '', GBP: '', CHF: '', OTHER: '' },
+  depart: '', return: '', days: '',
+  role: '', companion: '',
+  rows: []
+};
+function trvGetRate(currencyCode) {
+  if (!App.travelData.rates) return NaN;
+  const r = App.travelData.rates[currencyCode];
+  return r === '' || r == null ? NaN : parseFloat(r);
+}
+App.trvSignatureData = null;
+
+function travelEmptyRow() {
+  return { category: 'other', amountFx: '', currency: 'EUR', amountIls: '', notes: '', receipts: [] };
+}
+
+function renderTravelTable() {
+  const tbody = $('#travelBody');
+  tbody.innerHTML = '';
+  if (App.travelData.rows.length === 0) {
+    for (let i = 0; i < 3; i++) App.travelData.rows.push(travelEmptyRow());
+  }
+
+  App.travelData.rows.forEach((row, idx) => {
+    const catOptions = TRV_CATEGORIES.map(c =>
+      `<option value="${c.value}" ${row.category === c.value ? 'selected' : ''}>${c.label}</option>`
+    ).join('');
+    const currOptions = ['EUR','USD','GBP','CHF','ILS','OTHER'].map(c =>
+      `<option value="${c}" ${row.currency === c ? 'selected' : ''}>${c}</option>`
+    ).join('');
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${idx + 1}</td>
+      <td><select class="trv-cat" data-idx="${idx}">${catOptions}</select></td>
+      <td><input type="number" step="0.01" class="trv-fx" data-idx="${idx}" value="${row.amountFx || ''}" placeholder="0.00" /></td>
+      <td><select class="trv-curr" data-idx="${idx}">${currOptions}</select></td>
+      <td><input type="number" step="0.01" class="trv-ils" data-idx="${idx}" value="${row.amountIls || ''}" placeholder="0.00" /></td>
+      <td><input type="text" class="trv-notes" data-idx="${idx}" value="${(row.notes || '').replace(/"/g,'&quot;')}" placeholder="פרטי ההוצאה" /></td>
+      <td>
+        <div class="flex flex-wrap gap-1">
+          <label class="btn-ghost text-xs cursor-pointer" style="padding:6px 10px;">
+            📷 צלם
+            <input type="file" class="trv-file hidden" data-idx="${idx}" accept="image/*" capture="environment" />
+          </label>
+          <label class="btn-ghost text-xs cursor-pointer" style="padding:6px 10px;">
+            📎 העלה
+            <input type="file" class="trv-file hidden" data-idx="${idx}" accept="image/*,application/pdf" multiple />
+          </label>
+        </div>
+        <div class="mt-2" id="trv-receipts-${idx}"></div>
+      </td>
+      <td><button class="btn-danger-ghost trv-del" data-idx="${idx}" title="מחק שורה">✕</button></td>
+    `;
+    tbody.appendChild(tr);
+    renderTravelReceipts(idx);
+  });
+
+  // Wire up
+  tbody.querySelectorAll('.trv-cat').forEach(el => el.addEventListener('change', e => {
+    App.travelData.rows[+e.target.dataset.idx].category = e.target.value;
+    updateTravelTotals();
+  }));
+  tbody.querySelectorAll('.trv-curr').forEach(el => el.addEventListener('change', e => {
+    App.travelData.rows[+e.target.dataset.idx].currency = e.target.value;
+    autoConvertRow(+e.target.dataset.idx);
+  }));
+  tbody.querySelectorAll('.trv-fx').forEach(el => el.addEventListener('input', e => {
+    App.travelData.rows[+e.target.dataset.idx].amountFx = e.target.value;
+    autoConvertRow(+e.target.dataset.idx);
+  }));
+  tbody.querySelectorAll('.trv-ils').forEach(el => el.addEventListener('input', e => {
+    App.travelData.rows[+e.target.dataset.idx].amountIls = e.target.value;
+    updateTravelTotals();
+  }));
+  tbody.querySelectorAll('.trv-notes').forEach(el => el.addEventListener('input', e => {
+    App.travelData.rows[+e.target.dataset.idx].notes = e.target.value;
+  }));
+  tbody.querySelectorAll('.trv-file').forEach(el => el.addEventListener('change', e => {
+    const idx = +e.target.dataset.idx;
+    Array.from(e.target.files).forEach(file => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        App.travelData.rows[idx].receipts.push({ name: file.name, dataUrl: reader.result, type: file.type });
+        renderTravelReceipts(idx);
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = '';
+  }));
+  tbody.querySelectorAll('.trv-del').forEach(b => b.addEventListener('click', e => {
+    const idx = +e.currentTarget.dataset.idx;
+    App.travelData.rows.splice(idx, 1);
+    if (App.travelData.rows.length === 0) App.travelData.rows.push(travelEmptyRow());
+    renderTravelTable();
+    updateTravelTotals();
+  }));
+
+  updateTravelTotals();
+}
+
+function renderTravelReceipts(idx) {
+  const el = document.getElementById(`trv-receipts-${idx}`);
+  if (!el) return;
+  const r = App.travelData.rows[idx].receipts || [];
+  if (r.length === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = r.map((rec, ri) => {
+    const isImg = (rec.type || '').startsWith('image/');
+    const preview = isImg
+      ? `<img src="${rec.dataUrl}" style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border-soft); cursor:pointer;" data-trv-view="${idx}-${ri}" alt=""/>`
+      : `<span style="cursor:pointer; font-size:18px;" data-trv-view="${idx}-${ri}">📄</span>`;
+    const shortName = rec.name.length > 14 ? rec.name.slice(0,12)+'…' : rec.name;
+    return `<span class="receipt-chip" title="לחץ לצפייה — ${rec.name}">${preview} <span style="cursor:pointer;" data-trv-view="${idx}-${ri}">${shortName}</span> <button data-trv-rcp="${idx}-${ri}" title="מחק">✕</button></span>`;
+  }).join('');
+  el.querySelectorAll('[data-trv-view]').forEach(t => t.addEventListener('click', e => {
+    e.stopPropagation();
+    const [i, ri] = e.currentTarget.dataset.trvView.split('-').map(Number);
+    ReceiptViewer.open('travel', i, ri);
+  }));
+  el.querySelectorAll('button[data-trv-rcp]').forEach(b => b.addEventListener('click', e => {
+    e.stopPropagation();
+    const [i, ri] = e.target.dataset.trvRcp.split('-').map(Number);
+    App.travelData.rows[i].receipts.splice(ri, 1);
+    renderTravelReceipts(i);
+  }));
+}
+
+function autoConvertRow(idx) {
+  const row = App.travelData.rows[idx];
+  const fx = parseFloat(row.amountFx);
+  // Currency-specific rate, with OTHER as fallback for unknown codes
+  let rate = trvGetRate(row.currency);
+  if (isNaN(rate)) rate = trvGetRate('OTHER');
+
+  if (row.currency === 'ILS') {
+    row.amountIls = row.amountFx;
+  } else if (!isNaN(fx) && !isNaN(rate) && rate > 0) {
+    row.amountIls = (fx * rate).toFixed(2);
+  }
+  const ilsInput = document.querySelector(`.trv-ils[data-idx="${idx}"]`);
+  if (ilsInput) ilsInput.value = row.amountIls || '';
+  updateTravelTotals();
+}
+
+function updateTravelTotals() {
+  const cats = { flight: 0, lodging: 0, meals: 0, transport: 0, other: 0 };
+  let total = 0;
+  App.travelData.rows.forEach(r => {
+    const v = parseFloat(r.amountIls) || 0;
+    total += v;
+    if (cats[r.category] != null) cats[r.category] += v;
+    else cats.other += v;
+  });
+  $('#trvTotalILS').textContent = total.toFixed(2);
+  $('#catFlight').textContent = cats.flight.toFixed(2);
+  $('#catLodging').textContent = cats.lodging.toFixed(2);
+  $('#catMeals').textContent = cats.meals.toFixed(2);
+  $('#catTransport').textContent = cats.transport.toFixed(2);
+  $('#catOther').textContent = cats.other.toFixed(2);
+}
+
+function calcTripDays() {
+  const d1 = $('#trvDepart').value;
+  const d2 = $('#trvReturn').value;
+  if (!d1 || !d2) return;
+  const ms = new Date(d2).getTime() - new Date(d1).getTime();
+  if (isNaN(ms) || ms < 0) return;
+  const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
+  App.travelData.days = days;
+  $('#trvDays').value = days;
+}
+
+function travelDraftKey() {
+  const d = App.travelData.depart || 'unknown';
+  return `trip.${d}`;
+}
+
+function initTravel() {
+  $('#trvEmpName').textContent = App.currentEmployee;
+  $('#trvSubmitDate').textContent = fmtDDMMYYYY(new Date());
+
+  // If editing from history, keep the loaded data; otherwise try latest draft
+  if (App._editingHistoryId === null || App._editingHistoryId === undefined) {
+    const draftKey = `dcg.draft.${App.currentEmployee}.travel.current`;
+    const raw = _get(draftKey);
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        App.travelData = { ...App.travelData, ...(parsed.data || {}) };
+        App.trvSignatureData = parsed.signature || null;
+        toast(`טיוטת נסיעה נטענה (${new Date(parsed.savedAt).toLocaleString('he-IL')})`, 'info');
+      } catch(e){}
+    }
+  }
+
+  // Migration: an older draft might have had a single .rate. Push it onto the trip's currency rate map.
+  if (!App.travelData.rates) App.travelData.rates = { EUR: '', USD: '', GBP: '', CHF: '', OTHER: '' };
+  if (App.travelData.rate && !App.travelData.rates[App.travelData.currency || 'EUR']) {
+    App.travelData.rates[App.travelData.currency || 'EUR'] = App.travelData.rate;
+  }
+
+  $('#trvDest').value = App.travelData.dest || '';
+  $('#trvPurpose').value = App.travelData.purpose || '';
+  $('#trvCurrency').value = App.travelData.currency || 'EUR';
+  $('#trvDepart').value = App.travelData.depart || '';
+  $('#trvReturn').value = App.travelData.return || '';
+  $('#trvDays').value = App.travelData.days || '';
+  $('#trvRole').value = App.travelData.role || '';
+  $('#trvCompanion').value = App.travelData.companion || '';
+
+  // Per-currency rate inputs
+  ['EUR','USD','GBP','CHF','OTHER'].forEach(code => {
+    const el = $(`#trvRate-${code}`);
+    if (el) el.value = App.travelData.rates[code] || '';
+  });
+
+  renderTravelTable();
+  setupTravelSigPad();
+
+  // Field bindings — header text fields
+  ['Dest','Purpose','Depart','Return','Role','Companion','Currency'].forEach(k => {
+    const el = $(`#trv${k}`);
+    const propMap = { Dest:'dest', Purpose:'purpose', Depart:'depart', Return:'return', Role:'role', Companion:'companion', Currency:'currency' };
+    el.oninput = el.onchange = () => {
+      App.travelData[propMap[k]] = el.value;
+      if (k === 'Depart' || k === 'Return') calcTripDays();
+    };
+  });
+
+  // Field bindings — per-currency rate inputs
+  ['EUR','USD','GBP','CHF','OTHER'].forEach(code => {
+    const el = $(`#trvRate-${code}`);
+    if (!el) return;
+    el.oninput = () => {
+      App.travelData.rates[code] = el.value;
+      // Recalculate all rows that use this currency
+      App.travelData.rows.forEach((row, i) => {
+        const rowCurr = row.currency === code ? code : (row.currency || code);
+        if (row.currency === code || (code === 'OTHER' && !['EUR','USD','GBP','CHF','ILS'].includes(row.currency))) {
+          autoConvertRow(i);
+        }
+      });
+    };
+  });
+}
+
+/* Travel signature pad - separate canvas */
+let trvSigCtx, trvSigCanvas, trvSigDrawing = false;
+function setupTravelSigPad() {
+  trvSigCanvas = $('#trvSignaturePad');
+  if (!trvSigCanvas) return;
+  trvSigCtx = trvSigCanvas.getContext('2d');
+  resizeTrvSigPad();
+
+  const start = (x,y) => { trvSigDrawing = true; trvSigCtx.beginPath(); trvSigCtx.moveTo(x,y); };
+  const move = (x,y) => { if(!trvSigDrawing) return; trvSigCtx.lineTo(x,y); trvSigCtx.stroke(); };
+  const end = () => { trvSigDrawing = false; App.trvSignatureData = trvSigCanvas.toDataURL('image/png'); };
+  const pos = e => {
+    const r = trvSigCanvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return [t.clientX - r.left, t.clientY - r.top];
+  };
+  trvSigCanvas.onmousedown = e => start(...pos(e));
+  trvSigCanvas.onmousemove = e => move(...pos(e));
+  trvSigCanvas.onmouseup = end;
+  trvSigCanvas.onmouseleave = end;
+  trvSigCanvas.ontouchstart = e => { e.preventDefault(); start(...pos(e)); };
+  trvSigCanvas.ontouchmove = e => { e.preventDefault(); move(...pos(e)); };
+  trvSigCanvas.ontouchend = end;
+
+  $('#btnTrvClearSig').onclick = () => {
+    trvSigCtx.clearRect(0,0,trvSigCanvas.width, trvSigCanvas.height);
+    trvSigCtx.fillStyle = '#0d0d18';
+    trvSigCtx.fillRect(0,0,trvSigCanvas.width, trvSigCanvas.height);
+    App.trvSignatureData = null;
+  };
+}
+function resizeTrvSigPad() {
+  if (!trvSigCanvas) return;
+  const ratio = window.devicePixelRatio || 1;
+  const w = trvSigCanvas.offsetWidth || 600;
+  const h = 140;
+  trvSigCanvas.width = w * ratio;
+  trvSigCanvas.height = h * ratio;
+  trvSigCtx.scale(ratio, ratio);
+  trvSigCtx.fillStyle = '#0d0d18';
+  trvSigCtx.fillRect(0,0,trvSigCanvas.width, trvSigCanvas.height);
+  trvSigCtx.strokeStyle = '#3DB7BA';
+  trvSigCtx.lineWidth = 2;
+  trvSigCtx.lineCap = 'round';
+  trvSigCtx.lineJoin = 'round';
+  if (App.trvSignatureData) {
+    const img = new Image();
+    img.onload = () => trvSigCtx.drawImage(img, 0, 0, trvSigCanvas.width, trvSigCanvas.height);
+    img.src = App.trvSignatureData;
+  }
+}
+
+/* ---------- Signature pad ---------- */
+let sigCtx, sigCanvas, sigDrawing = false;
+function setupSignaturePad() {
+  sigCanvas = $('#signaturePad');
+  sigCtx = sigCanvas.getContext('2d');
+  resizeSignaturePad();
+
+  const start = (x,y) => { sigDrawing = true; sigCtx.beginPath(); sigCtx.moveTo(x,y); };
+  const move = (x,y) => { if(!sigDrawing) return; sigCtx.lineTo(x,y); sigCtx.stroke(); };
+  const end = () => { sigDrawing = false; App.signatureData = sigCanvas.toDataURL('image/png'); };
+  const pos = e => {
+    const r = sigCanvas.getBoundingClientRect();
+    const t = e.touches ? e.touches[0] : e;
+    return [t.clientX - r.left, t.clientY - r.top];
+  };
+  sigCanvas.addEventListener('mousedown', e => start(...pos(e)));
+  sigCanvas.addEventListener('mousemove', e => move(...pos(e)));
+  sigCanvas.addEventListener('mouseup', end);
+  sigCanvas.addEventListener('mouseleave', end);
+  sigCanvas.addEventListener('touchstart', e => { e.preventDefault(); start(...pos(e)); }, {passive:false});
+  sigCanvas.addEventListener('touchmove', e => { e.preventDefault(); move(...pos(e)); }, {passive:false});
+  sigCanvas.addEventListener('touchend', end);
+
+  $('#btnClearSig').addEventListener('click', () => {
+    sigCtx.clearRect(0,0,sigCanvas.width, sigCanvas.height);
+    sigCtx.fillStyle = '#0d0d18';
+    sigCtx.fillRect(0,0,sigCanvas.width, sigCanvas.height);
+    App.signatureData = null;
+  });
+  const handleResize = () => {
+    resizeSignaturePad();
+    if (typeof resizeTrvSigPad === 'function') resizeTrvSigPad();
+  };
+  window.addEventListener('resize', handleResize);
+  // Mobile: orientation changes don't always fire resize reliably
+  window.addEventListener('orientationchange', () => setTimeout(handleResize, 200));
+}
+function resizeSignaturePad() {
+  if (!sigCanvas) return;
+  const ratio = window.devicePixelRatio || 1;
+  const w = sigCanvas.offsetWidth || 600;
+  const h = 140;
+  sigCanvas.width = w * ratio;
+  sigCanvas.height = h * ratio;
+  sigCtx.scale(ratio, ratio);
+  sigCtx.fillStyle = '#0d0d18';
+  sigCtx.fillRect(0,0,sigCanvas.width, sigCanvas.height);
+  sigCtx.strokeStyle = '#3DB7BA';
+  sigCtx.lineWidth = 2;
+  sigCtx.lineCap = 'round';
+  sigCtx.lineJoin = 'round';
+  if (App.signatureData) drawSavedSignature();
+}
+function drawSavedSignature() {
+  if (!sigCanvas || !App.signatureData) return;
+  const img = new Image();
+  img.onload = () => sigCtx.drawImage(img, 0, 0, sigCanvas.width, sigCanvas.height);
+  img.src = App.signatureData;
+}
+
+/* ---------- Excel generation (xlsx-js-style with full styling) ---------- */
+function buildAttendanceWorksheet() {
+  const month = App.attendanceMonth;
+  const [y,m] = month.split('-').map(Number);
+  const monthLabel = `${HEB_MONTHS[m-1]} ${y}`;
+  const rows = buildAttendanceRows(month);
+
+  const ws = {};
+  ws['!ref'] = 'A1:G34';
+
+  // Row 2 — Title (B2:C2 merged) + Month (D2:G2 merged)
+  setCell(ws, 'B2', `אקסל נוכחות - ${App.currentEmployee}`, STYLE.boldTitle);
+  setCell(ws, 'D2', monthLabel, STYLE.boldCenter);
+
+  // Row 3 — Column headers
+  setCell(ws, 'B3', 'תאריך',       STYLE.header);
+  setCell(ws, 'C3', 'יום בשבוע',   STYLE.header);
+  setCell(ws, 'D3', 'שעות עבודה',  STYLE.header);
+  setCell(ws, 'E3', 'יום חופש',    STYLE.header);
+  setCell(ws, 'F3', 'יום מחלה',    STYLE.header);
+  setCell(ws, 'G3', 'יום מילואים', STYLE.header);
+
+  // Rows 4-34 — daily data
+  rows.forEach((r, idx) => {
+    const rowNum = 4 + idx;
+    const d = App.attendanceData[idx] || {};
+    const off = d.vacation || d.sick || d.reserve;
+    const isSat = r.dayIndex === 6;
+    const dayStyle = isSat
+      ? { font: { name: 'Arial', sz: 11, color: { rgb: '888888' } }, alignment: { horizontal: 'center', readingOrder: 2 } }
+      : STYLE.center;
+    setCell(ws, `B${rowNum}`, fmtDDMMYYYY(r.date),     dayStyle);
+    setCell(ws, `C${rowNum}`, HEBREW_DAYS[r.dayIndex], dayStyle);
+    if (!off && d.hours) setCell(ws, `D${rowNum}`, parseFloat(d.hours), STYLE.number, { type: 'n' });
+    if (d.vacation) setCell(ws, `E${rowNum}`, '✓', STYLE.boldCenter);
+    if (d.sick)     setCell(ws, `F${rowNum}`, '✓', STYLE.boldCenter);
+    if (d.reserve)  setCell(ws, `G${rowNum}`, '✓', STYLE.boldCenter);
+  });
+
+  ws['!merges'] = [
+    { s: { r: 1, c: 1 }, e: { r: 1, c: 2 } }, // B2:C2 title
+    { s: { r: 1, c: 3 }, e: { r: 1, c: 6 } }, // D2:G2 month
+  ];
+  ws['!cols'] = [{ wch: 2 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 14 }];
+  ws['!views'] = [{ RTL: true }];
+  return ws;
+}
+
+function buildExpenseWorksheet() {
+  const month = App.expenseMonth;
+  const monthLabel = fmtMonthLabel(month);
+  const role = ($('#expRole') && $('#expRole').value) || '';
+
+  const ws = {};
+  ws['!ref'] = 'A1:D27';
+
+  // Row 2 — Title (A2:D2 merged)
+  setCell(ws, 'A2', 'דוח החזר הוצאות - DCG Tech Ltd', STYLE.boldTitle);
+
+  // Rows 3-5 — header info (column B span merged with C,D)
+  setCell(ws, 'A3', 'חודש שכר', STYLE.bold);
+  setCell(ws, 'B3', monthLabel, STYLE.center);
+  setCell(ws, 'A4', 'שם עובד',  STYLE.bold);
+  setCell(ws, 'B4', App.currentEmployee, STYLE.center);
+  setCell(ws, 'A5', 'תפקיד',    STYLE.bold);
+  setCell(ws, 'B5', role,       STYLE.center);
+
+  // Row 6 — column headers
+  setCell(ws, 'A6', 'תאריך',          STYLE.header);
+  setCell(ws, 'B6', 'הוצאה + פירוט', STYLE.header);
+  setCell(ws, 'C6', 'סכום',          STYLE.header);
+  setCell(ws, 'D6', 'מס\' חשבונית', STYLE.header);
+
+  // Rows 7-23 — expense rows (17 rows total)
+  for (let i = 0; i < 17; i++) {
+    const r = App.expenseRows[i];
+    const rowNum = 7 + i;
+    if (r) {
+      if (r.date)    setCell(ws, `A${rowNum}`, fmtDDMMYYYY(new Date(r.date)), STYLE.center);
+      if (r.desc)    setCell(ws, `B${rowNum}`, r.desc, STYLE.rtl);
+      if (r.amount !== '' && r.amount != null) setCell(ws, `C${rowNum}`, Number(r.amount), STYLE.number, { type: 'n' });
+      if (r.invoice) setCell(ws, `D${rowNum}`, r.invoice, STYLE.center);
+    }
+  }
+
+  // Row 24 — total (A24:B24 merged with label, C24 = SUM)
+  setCell(ws, 'A24', 'סה"כ:', STYLE.bold);
+  setCell(ws, 'C24', 0, STYLE.numberBold, { formula: 'SUM(C7:C23)', value: App.expenseRows.reduce((s,r) => s + (parseFloat(r.amount)||0), 0) });
+
+  // Row 27 — date + signature labels
+  setCell(ws, 'A27', 'תאריך:',           STYLE.bold);
+  setCell(ws, 'B27', fmtDDMMYYYY(new Date()), STYLE.center);
+  setCell(ws, 'C27', 'חתימת העובד:',    STYLE.bold);
+  setCell(ws, 'D27', App.currentEmployee, STYLE.center);
+
+  ws['!merges'] = [
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, // A2:D2 title
+    { s: { r: 2, c: 1 }, e: { r: 2, c: 3 } }, // B3:D3 month
+    { s: { r: 3, c: 1 }, e: { r: 3, c: 3 } }, // B4:D4 name
+    { s: { r: 4, c: 1 }, e: { r: 4, c: 3 } }, // B5:D5 role
+    { s: { r: 23, c: 0 }, e: { r: 23, c: 1 } }, // A24:B24 total label
+  ];
+  ws['!cols'] = [{ wch: 14 }, { wch: 36 }, { wch: 14 }, { wch: 18 }];
+  ws['!views'] = [{ RTL: true }];
+  return ws;
+}
+
+function generateWorkbook() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, buildAttendanceWorksheet(), 'דוח נוכחות');
+  XLSX.utils.book_append_sheet(wb, buildExpenseWorksheet(), 'החזר הוצאות');
+  return wb;
+}
+
+/* ---------- Travel report Excel generation ----------
+   Matches the official DCG travel-report template 1:1
+   (cells, formulas, merges, bold headers, RTL). */
+
+const STYLE = {
+  bold:        { font: { bold: true, name: 'Arial', sz: 11 } },
+  boldCenter:  { font: { bold: true, name: 'Arial', sz: 11 }, alignment: { horizontal: 'center', vertical: 'center', readingOrder: 2 } },
+  boldTitle:   { font: { bold: true, name: 'Arial', sz: 14 }, alignment: { horizontal: 'center', vertical: 'center', readingOrder: 2 } },
+  center:      { alignment: { horizontal: 'center', vertical: 'center', readingOrder: 2 }, font: { name: 'Arial', sz: 11 } },
+  rtl:         { alignment: { horizontal: 'right', readingOrder: 2 }, font: { name: 'Arial', sz: 11 } },
+  number:      { numFmt: '#,##0.00', font: { name: 'Arial', sz: 11 } },
+  numberBold:  { numFmt: '#,##0.00', font: { bold: true, name: 'Arial', sz: 11 } },
+  header:      { font: { bold: true, name: 'Arial', sz: 11 }, fill: { fgColor: { rgb: 'D6F2F2' } }, alignment: { horizontal: 'center', vertical: 'center' }, border: { top:{style:'thin', color:{rgb:'000000'}}, bottom:{style:'thin', color:{rgb:'000000'}}, left:{style:'thin', color:{rgb:'000000'}}, right:{style:'thin', color:{rgb:'000000'}} } },
+};
+function setCell(ws, addr, value, style, opts) {
+  opts = opts || {};
+  const cell = {};
+  if (opts.formula) {
+    cell.f = opts.formula;
+    if (opts.value != null) { cell.v = opts.value; cell.t = 'n'; }
+  } else {
+    cell.v = value;
+    cell.t = opts.type || (typeof value === 'number' ? 'n' : 's');
+  }
+  if (style) cell.s = style;
+  ws[addr] = cell;
+}
+
+const TRV_CAT_LABEL = {
+  flight:    'הוצאות טיסה',
+  lodging:   'הוצאות לינה',
+  meals:     'אש"ל',
+  transport: 'נסיעות- השכרת רכב',
+  other:     'שונות (ארוחות, ביטוח, ויזה, טלפון)',
+};
+const CURRENCY_HEBREW = {
+  EUR: 'יורו', USD: 'דולר', GBP: 'לירה שטרלינג', CHF: 'פרנק', ILS: 'שקל', OTHER: ''
+};
+
+function buildTravelSummarySheet() {
+  const td = App.travelData;
+  const role = td.role || '';
+  const mainCurrency = td.currency || 'EUR';
+  const mainRate = (td.rates && parseFloat(td.rates[mainCurrency])) || 0;
+
+  // Sum per category
+  const totals = { flight:0, lodging:0, meals:0, transport:0, other:0 };
+  const totalsFx = { flight:0, lodging:0, meals:0, transport:0, other:0 };
+  td.rows.forEach(r => {
+    const ils = parseFloat(r.amountIls) || 0;
+    const fx  = parseFloat(r.amountFx)  || 0;
+    const cat = totals[r.category] != null ? r.category : 'other';
+    totals[cat]   += ils;
+    if (r.currency === mainCurrency) totalsFx[cat] += fx;
+  });
+  const grandTotal = totals.flight + totals.lodging + totals.meals + totals.transport + totals.other;
+
+  const ws = {};
+  ws['!ref'] = 'A1:G46';
+
+  // Row 1 — preamble (merged A1:E1)
+  setCell(ws, 'A1', 'אבקש לעדכן כי נערכה נסיעה עיסקית בחברה, בהתאם לנתונים הבאים:', STYLE.center);
+  // Row 2 — year (merged A2:E2)
+  setCell(ws, 'A2', `מעודכן לשנת ${new Date().getFullYear()}`, STYLE.center);
+  // Row 3 — date
+  setCell(ws, 'A3', `תאריך: ${fmtDDMMYYYY(new Date())}`, STYLE.rtl);
+  // Row 4 — title (merged A4:F4)
+  setCell(ws, 'A4', 'דו"ח נסיעה לחו"ל', STYLE.boldTitle);
+
+  // Row 6 — company / currency
+  setCell(ws, 'A6', 'שם החברה',   STYLE.bold);
+  setCell(ws, 'B6', 'דסג טק בע"מ', STYLE.center);
+  setCell(ws, 'D6', 'מטבע נסיעה',  STYLE.bold);
+  setCell(ws, 'E6', mainCurrency,  STYLE.center);
+
+  // Row 7 — depart + main rate
+  setCell(ws, 'A7', 'תאריך יציאה+ שעה', STYLE.bold);
+  setCell(ws, 'B7', td.depart || '',     STYLE.rtl);
+  setCell(ws, 'D7', 'שער מטבע',          STYLE.bold);
+  if (mainRate) setCell(ws, 'E7', mainRate, STYLE.number, { type: 'n' });
+
+  // Row 8 — return + reference rate (E8 is referenced by all C-formulas)
+  setCell(ws, 'A8', 'תאריך חזרה+ שעה', STYLE.bold);
+  setCell(ws, 'B8', td.return || '',     STYLE.rtl);
+  setCell(ws, 'D8', `שע"ח לחישוב ${mainCurrency}`, STYLE.bold);
+  setCell(ws, 'E8', mainRate || 0, STYLE.numberBold, { type: 'n' });
+
+  // Rows 9-11 — days / dest / purpose
+  setCell(ws, 'A9',  'מספר ימים',     STYLE.bold);
+  setCell(ws, 'B9',  td.days || '',    STYLE.rtl);
+  setCell(ws, 'A10', 'יעד',            STYLE.bold);
+  setCell(ws, 'B10', td.dest || '',    STYLE.rtl);
+  setCell(ws, 'A11', 'מטרת הנסיעה',    STYLE.bold);
+  setCell(ws, 'B11', td.purpose || '', STYLE.rtl);
+
+  // Row 14 — travelers header (merged A14:F14)
+  setCell(ws, 'A14', 'פרטי הנוסעים ותפקידם בחברה', STYLE.boldCenter);
+
+  // Rows 16-17 — names + roles
+  setCell(ws, 'A16', 'שם:',               STYLE.bold);
+  setCell(ws, 'B16', 'תפקיד',             STYLE.bold);
+  setCell(ws, 'C16', App.currentEmployee, STYLE.boldCenter);
+  setCell(ws, 'D16', role,                STYLE.bold);
+  if (td.companion) {
+    setCell(ws, 'A17', 'שם:',         STYLE.bold);
+    setCell(ws, 'B17', 'תפקיד',       STYLE.bold);
+    setCell(ws, 'C17', td.companion,  STYLE.bold);
+  }
+
+  // Row 19 — expense table headers
+  setCell(ws, 'B19', 'תשלום',          STYLE.header);
+  setCell(ws, 'C19', 'לאחר המרה לש"ח', STYLE.header);
+  setCell(ws, 'D19', 'תשלום בש"ח',     STYLE.header);
+  setCell(ws, 'E19', 'סה"כ בש"ח',       STYLE.header);
+
+  // Rows 20-24 — category totals with formulas
+  const catKeys = ['flight','lodging','meals','transport','other'];
+  catKeys.forEach((cat, i) => {
+    const r = 20 + i;
+    setCell(ws, `A${r}`, TRV_CAT_LABEL[cat], STYLE.bold);
+    setCell(ws, `B${r}`, totalsFx[cat] || 0, STYLE.number, { type: 'n' });
+    setCell(ws, `C${r}`, 0, STYLE.number, { formula: `B${r}*$E$8`, value: (totalsFx[cat]||0) * mainRate });
+    const directIls = Math.max(0, (totals[cat] || 0) - (totalsFx[cat]||0) * mainRate);
+    setCell(ws, `D${r}`, directIls, STYLE.number, { type: 'n' });
+    setCell(ws, `E${r}`, 0, STYLE.numberBold, { formula: `C${r}+D${r}`, value: totals[cat] || 0 });
+  });
+
+  // Row 26 — grand total before reconciliation
+  setCell(ws, 'A26', 'סה"כ הוצאות לפני תאום', STYLE.bold);
+  setCell(ws, 'B26', 0, STYLE.numberBold, { formula: 'SUM(E20:E24)', value: grandTotal });
+  setCell(ws, 'E26', 0, STYLE.numberBold, { formula: 'SUM(E20:E24)', value: grandTotal });
+
+  // Row 27 — header for reconciliation column
+  setCell(ws, 'D27', 'מותר בניכוי ליום', STYLE.bold);
+
+  // Row 28 — section header
+  setCell(ws, 'A28', 'תאום הוצאות:', STYLE.bold);
+
+  // Rows 29-33 — reconciliation references
+  const reconRows = [
+    { label: 'הוצאות טיסה ',                   ref: 'E20', cat: 'flight' },
+    { label: 'הוצאות לינה',                     ref: 'E21', cat: 'lodging' },
+    { label: 'אש"ל',                            ref: 'E22', cat: 'meals' },
+    { label: 'רכב/נסיעות',                     ref: 'E23', cat: 'transport' },
+    { label: 'שונות (ארוחות, ביטוח, ויזה, )',  ref: 'E24', cat: 'other' },
+  ];
+  reconRows.forEach((rr, i) => {
+    const r = 29 + i;
+    setCell(ws, `A${r}`, rr.label, STYLE.bold);
+    setCell(ws, `B${r}`, 0, STYLE.number, { formula: rr.ref, value: totals[rr.cat] || 0 });
+  });
+  setCell(ws, 'D29', 1, STYLE.boldCenter, { type: 'n' });
+
+  // Row 35 — after reconciliation
+  setCell(ws, 'A35', 'הוצאות לאחר תאום', STYLE.bold);
+  setCell(ws, 'B35', 0, STYLE.numberBold, { formula: 'SUM(B29:B33)', value: grandTotal });
+  setCell(ws, 'D35', 'הוצ\' לא מוכרות - חו"ל', STYLE.boldCenter);
+  setCell(ws, 'F35', 0, STYLE.number, { formula: 'B26-B35', value: 0 });
+
+  // Row 37 — final allowed
+  setCell(ws, 'A37', 'הוצאה מותרת להנח"ש', STYLE.bold);
+  setCell(ws, 'B37', 0, STYLE.numberBold, { formula: 'B35+B38', value: grandTotal });
+
+  // Row 38 — domestic + VAT
+  setCell(ws, 'A38', 'הוצאות בארץ+מע"מ', STYLE.rtl);
+
+  // Row 41 — notes header
+  setCell(ws, 'A41', 'הערות:', STYLE.bold);
+
+  // Merges (1:1 from original template)
+  ws['!merges'] = [
+    { s:{r:0,c:0},  e:{r:0,c:4}  },
+    { s:{r:1,c:0},  e:{r:1,c:4}  },
+    { s:{r:3,c:0},  e:{r:3,c:5}  },
+    { s:{r:5,c:1},  e:{r:5,c:2}  },
+    { s:{r:13,c:0}, e:{r:13,c:5} },
+    { s:{r:25,c:4}, e:{r:25,c:5} },
+    { s:{r:28,c:3}, e:{r:28,c:5} },
+    { s:{r:29,c:3}, e:{r:29,c:5} },
+    { s:{r:30,c:3}, e:{r:30,c:5} },
+    { s:{r:31,c:3}, e:{r:31,c:5} },
+    { s:{r:32,c:3}, e:{r:32,c:5} },
+    { s:{r:34,c:3}, e:{r:34,c:4} },
+    { s:{r:37,c:1}, e:{r:37,c:2} },
+    { s:{r:41,c:0}, e:{r:41,c:6} },
+    { s:{r:42,c:0}, e:{r:42,c:6} },
+    { s:{r:43,c:0}, e:{r:43,c:6} },
+    { s:{r:44,c:0}, e:{r:44,c:6} },
+    { s:{r:45,c:0}, e:{r:45,c:6} },
+  ];
+
+  ws['!cols'] = [
+    { wch: 36.16 }, { wch: 11.77 }, { wch: 15.69 },
+    { wch: 14.22 }, { wch: 13.61 }, { wch: 12.75 }, { wch: 10.91 },
+  ];
+  ws['!views'] = [{ RTL: true }];
+  return ws;
+}
+
+function buildTravelDetailSheet() {
+  const td = App.travelData;
+  const ws = {};
+  ws['!ref'] = 'A1:K27';
+
+  // Row 1 — column headers
+  setCell(ws, 'A1', 'מס"ד',         STYLE.header);
+  setCell(ws, 'B1', 'סיווג הוצאה ', STYLE.header);
+  setCell(ws, 'C1', 'סכום במט"ח',  STYLE.header);
+  setCell(ws, 'D1', 'מטבע',         STYLE.header);
+  setCell(ws, 'E1', 'שע"ח',          STYLE.header);
+  setCell(ws, 'F1', 'סכום בש"ח',    STYLE.header);
+  setCell(ws, 'G1', 'הערות',         STYLE.header);
+  setCell(ws, 'J1', 'שער חליפין',   STYLE.header);
+
+  // Per-currency rate map in J/K (column J = label, K = rate value)
+  // K1 holds the main rate (referenced by E formulas)
+  const mainCurrency = td.currency || 'EUR';
+  const mainRate = (td.rates && parseFloat(td.rates[mainCurrency])) || 0;
+  setCell(ws, 'K1', mainRate, STYLE.numberBold, { type: 'n' });
+
+  // Additional per-currency rates start at J2/K2
+  let kRow = 2;
+  ['EUR','USD','GBP','CHF','OTHER'].forEach(code => {
+    if (td.rates && td.rates[code]) {
+      const label = (CURRENCY_HEBREW[code] || code) + '-שקל';
+      setCell(ws, `J${kRow}`, label, STYLE.center);
+      setCell(ws, `K${kRow}`, parseFloat(td.rates[code]), STYLE.number, { type: 'n' });
+      kRow++;
+    }
+  });
+
+  // 25 expense rows (rows 2..26)
+  for (let i = 0; i < 25; i++) {
+    const r = 2 + i;
+    const row = td.rows[i];
+    // A = serial number
+    setCell(ws, `A${r}`, i + 1, STYLE.center, { type: 'n' });
+    if (row) {
+      const cleanCat = TRV_CAT_LABEL[row.category] || row.category || '';
+      const currHeb = CURRENCY_HEBREW[row.currency] || row.currency || '';
+      const fx = parseFloat(row.amountFx);
+      const ils = parseFloat(row.amountIls);
+
+      setCell(ws, `B${r}`, cleanCat.replace(/^[\u{1F300}-\u{1F9FF}]\s*/u, ''), STYLE.rtl);
+      if (!isNaN(fx)) setCell(ws, `C${r}`, fx, STYLE.number, { type: 'n' });
+      setCell(ws, `D${r}`, currHeb, STYLE.center);
+      // E = rate via formula reference to $K$1 (consistent with original)
+      setCell(ws, `E${r}`, 0, STYLE.number, { formula: '$K$1', value: mainRate });
+      // F = amount in ILS via formula =C{r}*$K$1 (consistent, even when currency differs)
+      const ilsCalculated = !isNaN(fx) ? fx * mainRate : 0;
+      setCell(ws, `F${r}`, 0, STYLE.numberBold, { formula: `C${r}*$K$1`, value: !isNaN(ils) ? ils : ilsCalculated });
+      if (row.notes) setCell(ws, `G${r}`, row.notes, STYLE.rtl);
+    } else {
+      // Empty row: still has serial number and rate formula like the original template
+      setCell(ws, `E${r}`, 0, STYLE.number, { formula: '$K$1', value: mainRate });
+      setCell(ws, `F${r}`, 0, STYLE.number, { formula: `C${r}*$K$1`, value: 0 });
+    }
+  }
+
+  // Row 27 — total
+  setCell(ws, 'E27', 'סה"כ:', STYLE.bold);
+  setCell(ws, 'F27', 0, STYLE.numberBold, { formula: 'SUM(F2:F26)', value: 0 });
+
+  // Column widths to match original
+  ws['!cols'] = [
+    { wch: 5 }, { wch: 28 }, { wch: 12 }, { wch: 8 },
+    { wch: 8 }, { wch: 13 }, { wch: 22 }, { wch: 4 },
+    { wch: 4 }, { wch: 16 }, { wch: 10 },
+  ];
+  ws['!views'] = [{ RTL: true }];
+  return ws;
+}
+
+function generateTravelWorkbook() {
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, buildTravelSummarySheet(), 'דוח נסיעה');
+  XLSX.utils.book_append_sheet(wb, buildTravelDetailSheet(),  'פירוט הוצאות');
+  return wb;
+}
+
+/* ---------- File name helpers ---------- */
+function generateFileName(yyyy_mm) {
+  const emp      = (App.currentEmployee || 'Employee').replace(/\s+/g, '_');
+  const monthEng = fmtMonthEnglish(yyyy_mm || App.attendanceMonth || App.expenseMonth || currentMonthYYYY_MM());
+  return 'DCG_Report_' + emp + '_' + monthEng + '.xlsx';
+}
+function generateTravelFileName() {
+  const emp  = (App.currentEmployee || 'Employee').replace(/\s+/g, '_');
+  const dest = (App.travelData.dest || 'Travel').replace(/[\s\/\\?*:\[\]]/g, '_');
+  const d    = ((App.travelData.depart || '').slice(0, 10) || new Date().toISOString().slice(0, 10)).replace(/-/g, '');
+  return 'DCG_Travel_' + emp + '_' + dest + '_' + d + '.xlsx';
+}
+
+/* ---------- Email via Google Apps Script relay ----------
+   ⚠️  SETUP REQUIRED (one-time, ~5 min):
+   1. Go to https://script.google.com → New project
+   2. Paste the Apps Script code from the instructions below
+   3. Deploy → New deployment → Web app
+      Execute as: Me  |  Who has access: Anyone
+   4. Copy the deployment URL and paste it below
+   -------------------------------------------------------- */
+const GAS_EMAIL_URL = 'https://script.google.com/macros/s/AKfycbw3h0Wv4JIuUIgrY1SnHJAgErsIL48DL0bdNmdIeroY2rYyvJOTS6NNF_owvp1qnq6L7Q/exec';
+const GAS_SECRET    = 'DCG-PORTAL-2026';  // must match the script
+
+async function sendReportEmail({ wb, fileName, subject, bodyText }) {
+  if (GAS_EMAIL_URL === 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+    throw new Error('כתובת שרת המייל לא הוגדרה עדיין (GAS_EMAIL_URL). ראה הוראות בקוד.');
+  }
+  const wbBase64 = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
+  const payload = JSON.stringify({
+    secret: GAS_SECRET,
+    subject,
+    body: bodyText,
+    attachment: wbBase64,
+    filename: fileName,
+  });
+  // no-cors: GAS redirects — browser gets opaque response, we assume success
+  await fetch(GAS_EMAIL_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain' },
+    body: payload,
+    mode: 'no-cors',
+  });
+  // With no-cors we can't read the response; treat reaching here = sent OK
+}
+
+/* ---------- Submit handlers ---------- */
+let _lastWb = null, _lastFileName = null;
+
+async function submitAttendance() {
+  const month = App.attendanceMonth;
+  if (!month) { toast('בחר חודש לפני שליחה', 'error'); return; }
+  const btn = $('#btnAttSubmit');
+  btn.disabled = true; btn.textContent = 'מייצר Excel...';
+  try {
+    const wb       = generateWorkbook();
+    const fileName = generateFileName(month);
+    XLSX.writeFile(wb, fileName);
+    const monthLabel = fmtMonthLabel(month);
+    const subject    = 'דוח חודשי - ' + App.currentEmployee + ' - ' + monthLabel;
+    const bodyText   = 'שלום,\n\nמצורף דוח נוכחות של ' + App.currentEmployee + ' לחודש ' + monthLabel + '.\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות';
+    try { await sendReportEmail({ wb, fileName, subject, bodyText }); toast('הדוח נשלח בהצלחה אל einav@dcg-tech.com', 'success'); }
+    catch (e) { console.error('[Graph] attendance:', e); toast('הקובץ הורד אך שליחת המייל נכשלה. שלח ידנית.', 'error', 7000); }
+    Store.appendHistory(App.currentEmployee, {
+      type: 'attendance', month, status: 'submitted', at: new Date().toISOString(),
+      payload: { data: JSON.parse(JSON.stringify(App.attendanceData)) },
+    });
+    App._editingHistoryId = null; _lastWb = wb; _lastFileName = fileName;
+    var tots = { hours: parseFloat($('#totHours').textContent)||0, vac: parseInt($('#totVacation').textContent)||0,
+                 sick: parseInt($('#totSick').textContent)||0, reserve: parseInt($('#totReserve').textContent)||0 };
+    $('#confirmSummary').innerHTML = '<p>📋 <strong>דוח נוכחות</strong> · ' + monthLabel + '</p><p class="mt-1">שעות עבודה: ' + tots.hours + '</p><p>ימי חופשה: ' + tots.vac + ' · ימי מחלה: ' + tots.sick + ' · ימי מילואים: ' + tots.reserve + '</p>';
+    showScreen('screen-confirm');
+  } catch (err) { console.error('submitAttendance:', err); toast('שגיאה: ' + (err.message || err), 'error', 6000); }
+  finally { btn.disabled = false; btn.textContent = 'שלח דוח (ייצור Excel + שליחה במייל)'; }
+}
+
+async function submitExpense() {
+  const month = App.expenseMonth;
+  if (!month) { toast('בחר חודש שכר לפני שליחה', 'error'); return; }
+  const btn = $('#btnExpSubmit');
+  btn.disabled = true; btn.textContent = 'מייצר Excel...';
+  try {
+    const wb       = generateWorkbook();
+    const fileName = generateFileName(month);
+    XLSX.writeFile(wb, fileName);
+    const monthLabel = fmtMonthLabel(month);
+    const total      = App.expenseRows.reduce(function(s,r){ return s + (parseFloat(r.amount)||0); }, 0);
+    const subject    = 'דוח חודשי - ' + App.currentEmployee + ' - ' + monthLabel;
+    const bodyText   = 'שלום,\n\nמצורף דוח החזר הוצאות של ' + App.currentEmployee + ' לחודש ' + monthLabel + '.\n\nסה"כ: ₪' + total.toFixed(2) + '\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות';
+    try { await sendReportEmail({ wb, fileName, subject, bodyText }); toast('הדוח נשלח בהצלחה אל einav@dcg-tech.com', 'success'); }
+    catch (e) { console.error('[Graph] expense:', e); toast('הקובץ הורד אך שליחת המייל נכשלה. שלח ידנית.', 'error', 7000); }
+    var role = ($('#expRole') && $('#expRole').value) || '';
+    Store.appendHistory(App.currentEmployee, {
+      type: 'expense', month, status: 'submitted', at: new Date().toISOString(),
+      payload: { rows: JSON.parse(JSON.stringify(App.expenseRows)), role, signature: App.signatureData },
+    });
+    App._editingHistoryId = null; _lastWb = wb; _lastFileName = fileName;
+    $('#confirmSummary').innerHTML = '<p>💰 <strong>דוח החזר הוצאות</strong> · ' + monthLabel + '</p><p class="mt-1">סה"כ להחזר: ₪' + total.toFixed(2) + '</p><p>מספר שורות: ' + App.expenseRows.filter(function(r){ return r.desc||r.amount; }).length + '</p>';
+    showScreen('screen-confirm');
+  } catch (err) { console.error('submitExpense:', err); toast('שגיאה: ' + (err.message || err), 'error', 6000); }
+  finally { btn.disabled = false; btn.textContent = 'שלח דוח (ייצור Excel + שליחה במייל)'; }
+}
+
+async function submitTravel() {
+  var td = App.travelData;
+  if (!td.dest) { toast('הזן יעד נסיעה לפני שליחה', 'error'); return; }
+  var btn = $('#btnTrvSubmit');
+  btn.disabled = true; btn.textContent = 'מייצר Excel...';
+  try {
+    var wb       = generateTravelWorkbook();
+    var fileName = generateTravelFileName();
+    XLSX.writeFile(wb, fileName);
+    var totalIls = parseFloat($('#trvTotalILS').textContent) || 0;
+    var dep = (td.depart || '').slice(0, 10);
+    var ret = (td.return  || '').slice(0, 10);
+    var subject  = 'דוח נסיעה - ' + App.currentEmployee + ' - ' + td.dest + ' (' + dep + ')';
+    var bodyText = 'שלום,\n\nמצורף דוח נסיעה לחו"ל של ' + App.currentEmployee + '.\n\nיעד: ' + (td.dest||'—') + '\nתאריכים: ' + dep + ' — ' + ret + '\nסה"כ הוצאות: ₪' + totalIls.toFixed(2) + '\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות';
+    try { await sendReportEmail({ wb, fileName, subject, bodyText }); toast('הדוח נשלח בהצלחה אל einav@dcg-tech.com', 'success'); }
+    catch (e) { console.error('[Graph] travel:', e); toast('הקובץ הורד אך שליחת המייל נכשלה. שלח ידנית.', 'error', 7000); }
+    Store.appendHistory(App.currentEmployee, {
+      type: 'travel', dest: td.dest, depart: dep, status: 'submitted', at: new Date().toISOString(),
+      payload: { data: JSON.parse(JSON.stringify(td)), signature: App.trvSignatureData },
+    });
+    App._editingHistoryId = null; _lastWb = wb; _lastFileName = fileName;
+    $('#confirmSummary').innerHTML = '<p>✈️ <strong>דוח נסיעה לחו"ל</strong></p><p class="mt-1">יעד: ' + (td.dest||'—') + '</p><p>תאריכים: ' + dep + ' — ' + ret + '</p><p>סה"כ הוצאות: ₪' + totalIls.toFixed(2) + '</p>';
+    showScreen('screen-confirm');
+  } catch (err) { console.error('submitTravel:', err); toast('שגיאה: ' + (err.message || err), 'error', 6000); }
+  finally { btn.disabled = false; btn.textContent = 'שלח דוח (ייצור Excel + שליחה במייל)'; }
+}
+
+/* ---------- Receipt Viewer + Crop ---------- */
+var ReceiptViewer = (function() {
+  var _type, _rowIdx, _recIdx, _rotAngle = 0, _currentDataUrl = null;
+  var _cropImg = null, _cropW = 0, _cropH = 0;
+  var _box = { x:0, y:0, w:0, h:0 };
+  var _drag = null, _dragStart = null, _boxStart = null;
+
+  function _getRec() {
+    if (_type === 'expense') return ((App.expenseRows[_rowIdx]     || {}).receipts || [])[_recIdx];
+    if (_type === 'travel')  return ((App.travelData.rows[_rowIdx] || {}).receipts || [])[_recIdx];
+    return null;
+  }
+  function _setRec(url) {
+    if (_type === 'expense') { App.expenseRows[_rowIdx].receipts[_recIdx].dataUrl = url; renderReceipts(_rowIdx); }
+    if (_type === 'travel')  { App.travelData.rows[_rowIdx].receipts[_recIdx].dataUrl = url; renderTravelReceipts(_rowIdx); }
+  }
+  function _toBlob(dataUrl) {
+    var parts = dataUrl.split(','), mime = parts[0].match(/:(.*?);/)[1];
+    var bin = atob(parts[1]), arr = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+    return new Blob([arr], { type: mime });
+  }
+
+  function open(type, rowIdx, recIdx) {
+    _type = type; _rowIdx = rowIdx; _recIdx = recIdx; _rotAngle = 0;
+    var rec = _getRec(); if (!rec) return;
+    _currentDataUrl = rec.dataUrl;
+    var modal = $('#receiptModal');
+    modal.classList.remove('hidden'); modal.style.display = 'flex';
+    $('#receiptModalName').textContent = rec.name || '';
+    var pane = $('#receiptCropPane'); pane.classList.add('hidden'); pane.style.display = 'none';
+    var isImg = (rec.type || '').startsWith('image/');
+    var isPdf = rec.type === 'application/pdf';
+    var imgEl = $('#receiptImg'), pdfEl = $('#receiptPdf');
+    if (isImg) {
+      imgEl.src = rec.dataUrl; imgEl.style.transform = ''; imgEl.classList.remove('hidden'); pdfEl.classList.add('hidden');
+      $('#receiptCropBtn').classList.remove('hidden'); $('#receiptRotateBtn').classList.remove('hidden');
+    } else if (isPdf) {
+      pdfEl.src = URL.createObjectURL(_toBlob(rec.dataUrl));
+      pdfEl.classList.remove('hidden'); imgEl.classList.add('hidden');
+      $('#receiptCropBtn').classList.add('hidden'); $('#receiptRotateBtn').classList.add('hidden');
+    }
+  }
+
+  function close() {
+    var modal = $('#receiptModal'); modal.classList.add('hidden'); modal.style.display = 'none';
+    $('#receiptImg').src = ''; $('#receiptPdf').src = '';
+    var pane = $('#receiptCropPane'); pane.classList.add('hidden'); pane.style.display = 'none';
+  }
+
+  function rotate() {
+    _rotAngle = (_rotAngle + 90) % 360;
+    var img = new Image();
+    img.onload = function() {
+      var swap = _rotAngle === 90 || _rotAngle === 270;
+      var c = document.createElement('canvas');
+      c.width = swap ? img.height : img.width; c.height = swap ? img.width : img.height;
+      var ctx = c.getContext('2d');
+      ctx.translate(c.width/2, c.height/2); ctx.rotate(_rotAngle * Math.PI / 180);
+      ctx.drawImage(img, -img.width/2, -img.height/2);
+      _currentDataUrl = c.toDataURL('image/png');
+      $('#receiptImg').src = _currentDataUrl; _setRec(_currentDataUrl);
+    };
+    img.src = _currentDataUrl;
+  }
+
+  function download() {
+    var rec = _getRec(); if (!rec) return;
+    var a = document.createElement('a'); a.href = rec.dataUrl; a.download = rec.name || 'receipt'; a.click();
+  }
+
+  function _syncBox() {
+    var el = $('#cropBox');
+    el.style.left = _box.x + 'px'; el.style.top = _box.y + 'px';
+    el.style.width = _box.w + 'px'; el.style.height = _box.h + 'px';
+  }
+
+  function openCrop() {
+    var src = $('#receiptImg').src; if (!src || src === window.location.href) return;
+    var pane = $('#receiptCropPane'); pane.classList.remove('hidden'); pane.style.display = 'flex';
+    var canvas = $('#cropCanvas'), ctx = canvas.getContext('2d');
+    var img = new Image();
+    img.onload = function() {
+      _cropImg = img;
+      var maxW = Math.min(window.innerWidth * 0.88, 860), maxH = window.innerHeight - 240;
+      var scale = Math.min(1, maxW / img.width, maxH / img.height);
+      _cropW = Math.round(img.width * scale); _cropH = Math.round(img.height * scale);
+      canvas.width = _cropW; canvas.height = _cropH;
+      canvas.style.width = _cropW + 'px'; canvas.style.height = _cropH + 'px';
+      ctx.drawImage(img, 0, 0, _cropW, _cropH);
+      _box = { x: Math.round(_cropW*0.1), y: Math.round(_cropH*0.1), w: Math.round(_cropW*0.8), h: Math.round(_cropH*0.8) };
+      _syncBox();
+    };
+    img.src = src;
+  }
+
+  function applyCrop() {
+    if (!_cropImg) return;
+    var scale = _cropImg.width / _cropW;
+    var c = document.createElement('canvas');
+    c.width = Math.round(_box.w*scale); c.height = Math.round(_box.h*scale);
+    c.getContext('2d').drawImage(_cropImg, _box.x*scale, _box.y*scale, _box.w*scale, _box.h*scale, 0, 0, c.width, c.height);
+    _currentDataUrl = c.toDataURL('image/png');
+    $('#receiptImg').src = _currentDataUrl; _setRec(_currentDataUrl);
+    var pane = $('#receiptCropPane'); pane.classList.add('hidden'); pane.style.display = 'none';
+    toast('חיתוך הוחל', 'success');
+  }
+
+  function resetCrop() {
+    if (!_cropW) return;
+    _box = { x: Math.round(_cropW*0.1), y: Math.round(_cropH*0.1), w: Math.round(_cropW*0.8), h: Math.round(_cropH*0.8) };
+    _syncBox();
+  }
+
+  function initCropInteraction() {
+    var container = $('#cropContainer'); var MIN = 20;
+    function _pt(e) {
+      var r = container.getBoundingClientRect(), pt = e.touches ? e.touches[0] : e;
+      return { x: pt.clientX - r.left, y: pt.clientY - r.top };
+    }
+    function onDown(e) {
+      var p = _pt(e), tgt = e.target, box = $('#cropBox');
+      if (tgt.classList.contains('crop-handle')) _drag = tgt.dataset.h;
+      else if (tgt === box || box.contains(tgt)) _drag = 'move';
+      else return;
+      _dragStart = p; _boxStart = Object.assign({}, _box); e.preventDefault();
+    }
+    function onMove(e) {
+      if (!_drag) return;
+      var p = _pt(e), dx = p.x - _dragStart.x, dy = p.y - _dragStart.y, b = Object.assign({}, _boxStart);
+      if (_drag === 'move') {
+        b.x = Math.max(0, Math.min(_cropW-b.w, b.x+dx)); b.y = Math.max(0, Math.min(_cropH-b.h, b.y+dy));
+      } else if (_drag === 'se') {
+        b.w = Math.max(MIN, Math.min(_cropW-b.x, b.w+dx)); b.h = Math.max(MIN, Math.min(_cropH-b.y, b.h+dy));
+      } else if (_drag === 'sw') {
+        var nx = Math.max(0, Math.min(b.x+b.w-MIN, b.x+dx)); b.w = b.x+b.w-nx; b.x = nx;
+        b.h = Math.max(MIN, Math.min(_cropH-b.y, b.h+dy));
+      } else if (_drag === 'ne') {
+        b.w = Math.max(MIN, Math.min(_cropW-b.x, b.w+dx));
+        var ny = Math.max(0, Math.min(b.y+b.h-MIN, b.y+dy)); b.h = b.y+b.h-ny; b.y = ny;
+      } else if (_drag === 'nw') {
+        var nx2 = Math.max(0, Math.min(b.x+b.w-MIN, b.x+dx)); b.w = b.x+b.w-nx2; b.x = nx2;
+        var ny2 = Math.max(0, Math.min(b.y+b.h-MIN, b.y+dy)); b.h = b.y+b.h-ny2; b.y = ny2;
+      }
+      _box = b; _syncBox(); e.preventDefault();
+    }
+    function onUp() { _drag = null; }
+    container.addEventListener('mousedown', onDown);
+    container.addEventListener('mousemove', onMove);
+    container.addEventListener('mouseup', onUp);
+    container.addEventListener('mouseleave', onUp);
+    container.addEventListener('touchstart', onDown, { passive: false });
+    container.addEventListener('touchmove',  onMove, { passive: false });
+    container.addEventListener('touchend',   onUp);
+  }
+
+  return { open: open, close: close, rotate: rotate, download: download,
+           openCrop: openCrop, applyCrop: applyCrop, resetCrop: resetCrop,
+           initCropInteraction: initCropInteraction };
+})();
+
+function initReceiptViewer() {
+  $('#receiptCloseBtn').addEventListener('click',    ReceiptViewer.close);
+  $('#receiptRotateBtn').addEventListener('click',   ReceiptViewer.rotate);
+  $('#receiptDownloadBtn').addEventListener('click', ReceiptViewer.download);
+  $('#receiptCropBtn').addEventListener('click',     function(){ ReceiptViewer.openCrop(); });
+  $('#cropApplyBtn').addEventListener('click',       function(){ ReceiptViewer.applyCrop(); });
+  $('#cropResetBtn').addEventListener('click',       function(){ ReceiptViewer.resetCrop(); });
+  $('#cropCancelBtn').addEventListener('click', function() {
+    var p = $('#receiptCropPane'); p.classList.add('hidden'); p.style.display = 'none';
+  });
+  ReceiptViewer.initCropInteraction();
+  $('#receiptModal').addEventListener('click', function(e) {
+    if (e.target === $('#receiptModal') || e.target === $('#receiptViewArea')) ReceiptViewer.close();
+  });
+}
+
+/* ---------- DOMContentLoaded — wire everything together ---------- */
+document.addEventListener('DOMContentLoaded', function() {
+
+  /* Navigation: any element with data-go="screen-xxx" */
+  document.addEventListener('click', function(e) {
+    var el = e.target.closest('[data-go]');
+    if (!el) return;
+    var target = el.dataset.go;
+    if (!target) return;
+    if (!App.currentEmployee && target !== 'screen-login') return;
+    showScreen(target);
+  });
+
+  /* Logout */
+  $('#btnLogout').addEventListener('click', forceLogout);
+
+  /* ── ATTENDANCE ── */
+  $('#attMonth').addEventListener('change', function(e) {
+    App.attendanceMonth = e.target.value;
+    App.attendanceData  = {};
+    App._editingHistoryId = null;
+    var draft = Store.loadDraft(App.currentEmployee, 'attendance', e.target.value);
+    if (draft && draft.data) {
+      App.attendanceData = draft.data;
+      toast('טיוטה נטענה (' + new Date(draft.savedAt).toLocaleString('he-IL') + ')', 'info');
+    }
+    renderAttendanceTable();
+  });
+  $('#btnAttSaveDraft').addEventListener('click', function() {
+    if (!App.currentEmployee || !App.attendanceMonth) return;
+    Store.saveDraft(App.currentEmployee, 'attendance', App.attendanceMonth, { data: App.attendanceData });
+    toast('טיוטה נשמרה', 'success');
+  });
+  $('#btnAttSubmit').addEventListener('click', submitAttendance);
+
+  /* ── EXPENSE ── */
+  $('#expMonth').addEventListener('change', function(e) {
+    App.expenseMonth = e.target.value;
+    App._editingHistoryId = null;
+    var draft = Store.loadDraft(App.currentEmployee, 'expense', e.target.value);
+    if (draft && draft.data) {
+      App.expenseRows = draft.data.rows || [];
+      if ($('#expRole')) $('#expRole').value = draft.data.role || '';
+      App.signatureData = draft.data.signature || null;
+      if (App.signatureData) drawSavedSignature();
+      toast('טיוטה נטענה (' + new Date(draft.savedAt).toLocaleString('he-IL') + ')', 'info');
+    } else { App.expenseRows = []; }
+    renderExpenseTable();
+  });
+  $('#btnAddExpenseRow').addEventListener('click', function() {
+    if (App.expenseRows.length >= 17) { toast('מקסימום 17 שורות', 'error'); return; }
+    App.expenseRows.push({ date: '', desc: '', amount: '', invoice: '', receipts: [] });
+    renderExpenseTable();
+  });
+  $('#btnExpSaveDraft').addEventListener('click', function() {
+    if (!App.currentEmployee || !App.expenseMonth) return;
+    var role = ($('#expRole') && $('#expRole').value) || '';
+    Store.saveDraft(App.currentEmployee, 'expense', App.expenseMonth,
+      { data: { rows: App.expenseRows, role: role, signature: App.signatureData } });
+    toast('טיוטה נשמרה', 'success');
+  });
+  $('#btnExpSubmit').addEventListener('click', submitExpense);
+
+  /* ── TRAVEL ── */
+  $('#btnAddTravelRow').addEventListener('click', function() {
+    App.travelData.rows.push(travelEmptyRow());
+    renderTravelTable(); updateTravelTotals();
+  });
+  $('#btnTrvSaveDraft').addEventListener('click', function() {
+    if (!App.currentEmployee) return;
+    var key = 'dcg.draft.' + App.currentEmployee + '.travel.current';
+    _set(key, JSON.stringify({ data: App.travelData, signature: App.trvSignatureData, savedAt: new Date().toISOString() }));
+    toast('טיוטת נסיעה נשמרה', 'success');
+  });
+  $('#btnTrvSubmit').addEventListener('click', submitTravel);
+
+  /* ── CONFIRM — download copy ── */
+  $('#btnDownloadCopy').addEventListener('click', function() {
+    if (_lastWb && _lastFileName) { XLSX.writeFile(_lastWb, _lastFileName); toast('הקובץ הורד', 'success'); }
+    else toast('אין קובץ שמור כרגע', 'error');
+  });
+
+  /* ── Signature pad (expense) ── */
+  setupSignaturePad();
+
+  /* ── Receipt viewer ── */
+  initReceiptViewer();
+
+  /* ── Login ── */
+  initLogin();
+});
+</script>
+</body>
+</html>
