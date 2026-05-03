@@ -778,12 +778,14 @@
           <table class="dcg-table" id="attendanceTable">
             <thead>
               <tr>
-                <th style="width: 14%">תאריך</th>
-                <th style="width: 12%">יום בשבוע</th>
-                <th style="width: 24%">שעות עבודה</th>
-                <th style="width: 16%">יום חופש</th>
-                <th style="width: 16%">יום מחלה</th>
-                <th style="width: 18%">יום מילואים</th>
+                <th style="width: 10%">תאריך</th>
+                <th style="width: 10%">יום בשבוע</th>
+                <th style="width: 14%">שעות עבודה</th>
+                <th style="width: 11%">יום חופש</th>
+                <th style="width: 11%">יום מחלה</th>
+                <th style="width: 12%">יום מילואים</th>
+                <th style="width: 9%">חו״ל</th>
+                <th style="width: 23%">הערות</th>
               </tr>
             </thead>
             <tbody id="attendanceBody"></tbody>
@@ -794,6 +796,8 @@
                 <td><span id="totVacation">0</span> ימי חופשה</td>
                 <td><span id="totSick">0</span> ימי מחלה</td>
                 <td><span id="totReserve">0</span> ימי מילואים</td>
+                <td><span id="totAbroad">0</span> ימים</td>
+                <td></td>
               </tr>
             </tfoot>
           </table>
@@ -1529,7 +1533,7 @@ function renderAttendanceTable() {
     if (isSat) tr.classList.add('is-saturday');
     if (isFri) tr.classList.add('is-friday');
 
-    const saved = App.attendanceData[idx] || { hours: '', vacation: false, sick: false, reserve: false };
+    const saved = App.attendanceData[idx] || { hours: '', vacation: false, sick: false, reserve: false, abroad: false, notes: '' };
 
     tr.innerHTML = `
       <td>${fmtDDMMYYYY(r.date)}</td>
@@ -1537,9 +1541,11 @@ function renderAttendanceTable() {
       <td>
         <input type="number" min="0" max="24" step="0.5" value="${saved.hours}" data-idx="${idx}" class="att-hours" />
       </td>
-      <td><input type="checkbox" class="dcg-check att-vac" data-idx="${idx}" ${saved.vacation ? 'checked' : ''}/></td>
-      <td><input type="checkbox" class="dcg-check att-sick" data-idx="${idx}" ${saved.sick ? 'checked' : ''}/></td>
+      <td><input type="checkbox" class="dcg-check att-vac"    data-idx="${idx}" ${saved.vacation ? 'checked' : ''}/></td>
+      <td><input type="checkbox" class="dcg-check att-sick"   data-idx="${idx}" ${saved.sick    ? 'checked' : ''}/></td>
       <td><input type="checkbox" class="dcg-check att-reserve" data-idx="${idx}" ${saved.reserve ? 'checked' : ''}/></td>
+      <td><input type="checkbox" class="dcg-check att-abroad" data-idx="${idx}" ${saved.abroad  ? 'checked' : ''}/></td>
+      <td><input type="text" class="att-notes" data-idx="${idx}" value="${(saved.notes||'').replace(/"/g,'&quot;')}" placeholder="הערה..." style="width:100%;min-width:80px;" /></td>
     `;
     tbody.appendChild(tr);
   });
@@ -1587,6 +1593,19 @@ function renderAttendanceTable() {
     setExclusiveDayType(+e.target.dataset.idx, 'reserve', e.target.checked, e.target.closest('tr'));
   }));
 
+  tbody.querySelectorAll('.att-abroad').forEach(chk => chk.addEventListener('change', e => {
+    const idx = +e.target.dataset.idx;
+    App.attendanceData[idx] = App.attendanceData[idx] || {};
+    App.attendanceData[idx].abroad = e.target.checked;
+    updateAttendanceTotals();
+  }));
+
+  tbody.querySelectorAll('.att-notes').forEach(inp => inp.addEventListener('input', e => {
+    const idx = +e.target.dataset.idx;
+    App.attendanceData[idx] = App.attendanceData[idx] || {};
+    App.attendanceData[idx].notes = e.target.value;
+  }));
+
   // Apply existing class state for loaded data
   Object.entries(App.attendanceData).forEach(([idx, val]) => {
     const tr = tbody.children[+idx];
@@ -1600,17 +1619,19 @@ function renderAttendanceTable() {
 }
 
 function updateAttendanceTotals() {
-  let hours = 0, vac = 0, sick = 0, reserve = 0;
+  let hours = 0, vac = 0, sick = 0, reserve = 0, abroad = 0;
   Object.values(App.attendanceData).forEach(d => {
     if (d.vacation) vac++;
     else if (d.sick) sick++;
     else if (d.reserve) reserve++;
     else if (d.hours && !isNaN(parseFloat(d.hours))) hours += parseFloat(d.hours);
+    if (d.abroad) abroad++;
   });
   $('#totHours').textContent = (Math.round(hours*10)/10).toString();
   $('#totVacation').textContent = vac;
   $('#totSick').textContent = sick;
   $('#totReserve').textContent = reserve;
+  $('#totAbroad').textContent = abroad;
 }
 
 
@@ -2134,9 +2155,9 @@ function buildAttendanceWorksheet() {
   const rows = buildAttendanceRows(month);
 
   const ws = {};
-  ws['!ref'] = 'A1:G34';
+  ws['!ref'] = 'A1:I34';
 
-  // Row 2 — Title (B2:C2 merged) + Month (D2:G2 merged)
+  // Row 2 — Title (B2:C2 merged) + Month (D2:I2 merged)
   setCell(ws, 'B2', `אקסל נוכחות - ${App.currentEmployee}`, STYLE.boldTitle);
   setCell(ws, 'D2', monthLabel, STYLE.boldCenter);
 
@@ -2147,6 +2168,8 @@ function buildAttendanceWorksheet() {
   setCell(ws, 'E3', 'יום חופש',    STYLE.header);
   setCell(ws, 'F3', 'יום מחלה',    STYLE.header);
   setCell(ws, 'G3', 'יום מילואים', STYLE.header);
+  setCell(ws, 'H3', 'חו״ל',        STYLE.header);
+  setCell(ws, 'I3', 'הערות',       STYLE.header);
 
   // Rows 4-34 — daily data
   rows.forEach((r, idx) => {
@@ -2163,13 +2186,15 @@ function buildAttendanceWorksheet() {
     if (d.vacation) setCell(ws, `E${rowNum}`, '✓', STYLE.boldCenter);
     if (d.sick)     setCell(ws, `F${rowNum}`, '✓', STYLE.boldCenter);
     if (d.reserve)  setCell(ws, `G${rowNum}`, '✓', STYLE.boldCenter);
+    if (d.abroad)   setCell(ws, `H${rowNum}`, '✓', STYLE.boldCenter);
+    if (d.notes)    setCell(ws, `I${rowNum}`, d.notes, STYLE.rtl);
   });
 
   ws['!merges'] = [
     { s: { r: 1, c: 1 }, e: { r: 1, c: 2 } }, // B2:C2 title
-    { s: { r: 1, c: 3 }, e: { r: 1, c: 6 } }, // D2:G2 month
+    { s: { r: 1, c: 3 }, e: { r: 1, c: 8 } }, // D2:I2 month
   ];
-  ws['!cols'] = [{ wch: 2 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 14 }];
+  ws['!cols'] = [{ wch: 2 }, { wch: 14 }, { wch: 14 }, { wch: 14 }, { wch: 12 }, { wch: 12 }, { wch: 14 }, { wch: 10 }, { wch: 28 }];
   ws['!views'] = [{ RTL: true }];
   return ws;
 }
@@ -2589,8 +2614,9 @@ async function submitAttendance() {
     });
     App._editingHistoryId = null; _lastWb = wb; _lastFileName = fileName;
     var tots = { hours: parseFloat($('#totHours').textContent)||0, vac: parseInt($('#totVacation').textContent)||0,
-                 sick: parseInt($('#totSick').textContent)||0, reserve: parseInt($('#totReserve').textContent)||0 };
-    $('#confirmSummary').innerHTML = '<p>📋 <strong>דוח נוכחות</strong> · ' + monthLabel + '</p><p class="mt-1">שעות עבודה: ' + tots.hours + '</p><p>ימי חופשה: ' + tots.vac + ' · ימי מחלה: ' + tots.sick + ' · ימי מילואים: ' + tots.reserve + '</p>';
+                 sick: parseInt($('#totSick').textContent)||0, reserve: parseInt($('#totReserve').textContent)||0,
+                 abroad: parseInt($('#totAbroad').textContent)||0 };
+    $('#confirmSummary').innerHTML = '<p>📋 <strong>דוח נוכחות</strong> · ' + monthLabel + '</p><p class="mt-1">שעות עבודה: ' + tots.hours + '</p><p>ימי חופשה: ' + tots.vac + ' · ימי מחלה: ' + tots.sick + ' · ימי מילואים: ' + tots.reserve + (tots.abroad ? ' · ימי חו״ל: ' + tots.abroad : '') + '</p>';
     showScreen('screen-confirm');
   } catch (err) { console.error('submitAttendance:', err); toast('שגיאה: ' + (err.message || err), 'error', 6000); }
   finally { btn.disabled = false; btn.textContent = 'שלח דוח (ייצור Excel + שליחה במייל)'; }
