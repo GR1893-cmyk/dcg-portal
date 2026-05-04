@@ -2185,6 +2185,7 @@ function drawSavedSignature() {
 /* ---------- Excel generation (xlsx-js-style with full styling) ---------- */
 function buildAttendanceWorksheet() {
   const month = App.attendanceMonth;
+  if (!month) return XLSX.utils.aoa_to_sheet([['אין נתוני נוכחות']]);
   const [y,m] = month.split('-').map(Number);
   const monthLabel = `${HEB_MONTHS[m-1]} ${y}`;
   const rows = buildAttendanceRows(month);
