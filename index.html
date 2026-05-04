@@ -232,7 +232,7 @@
   /* Each table sets a sensible min-width so on mobile the user gets a proper
      horizontally-scrollable table instead of cells getting crushed. */
   #attendanceTable { min-width: 600px; }
-  #expenseTable    { min-width: 720px; }
+  #expenseTable    { min-width: 820px; }
   #travelTable     { min-width: 880px; }
   .dcg-table thead th {
     background: linear-gradient(180deg, rgba(0,229,255,0.18), rgba(0,229,255,0.08));
@@ -843,11 +843,12 @@
           <table class="dcg-table" id="expenseTable">
             <thead>
               <tr>
-                <th style="width: 14%">תאריך</th>
-                <th style="width: 36%">הוצאה + פירוט</th>
-                <th style="width: 14%">סכום (₪)</th>
-                <th style="width: 16%">מס׳ חשבונית</th>
-                <th style="width: 16%">קבלה</th>
+                <th style="width: 11%">תאריך</th>
+                <th style="width: 27%">הוצאה + פירוט</th>
+                <th style="width: 10%">סכום</th>
+                <th style="width: 13%">מטבע</th>
+                <th style="width: 13%">מס׳ חשבונית</th>
+                <th style="width: 14%">קבלה</th>
                 <th style="width: 4%"></th>
               </tr>
             </thead>
@@ -855,7 +856,7 @@
             <tfoot>
               <tr>
                 <td colspan="2">סה״כ להחזר:</td>
-                <td colspan="4">₪<span id="totExpense">0.00</span></td>
+                <td colspan="5" id="totExpense" style="font-size:0.85rem; line-height:1.6;">₪0.00</td>
               </tr>
             </tfoot>
           </table>
@@ -1653,14 +1654,25 @@ function renderExpenseTable() {
   const tbody = $('#expenseBody');
   tbody.innerHTML = '';
   if (App.expenseRows.length === 0) {
-    for (let i=0;i<3;i++) App.expenseRows.push({date:'', desc:'', amount:'', invoice:'', receipts:[]});
+    for (let i=0;i<3;i++) App.expenseRows.push({date:'', desc:'', amount:'', currency:'ILS', currencyOther:'', invoice:'', receipts:[]});
   }
   App.expenseRows.forEach((row, idx) => {
     const tr = document.createElement('tr');
+    const cur = row.currency || 'ILS';
+    const isOther = cur === 'OTHER';
     tr.innerHTML = `
       <td><input type="date" class="exp-date" data-idx="${idx}" value="${row.date||''}" /></td>
       <td><input type="text" class="exp-desc" data-idx="${idx}" value="${(row.desc||'').replace(/"/g,'&quot;')}" placeholder="לדוגמה: דלק לכביש 6" /></td>
       <td><input type="number" min="0" step="0.01" class="exp-amount" data-idx="${idx}" value="${row.amount||''}" /></td>
+      <td>
+        <select class="exp-currency" data-idx="${idx}" style="margin-bottom:${isOther?'4px':'0'}">
+          <option value="ILS" ${cur==='ILS'?'selected':''}>₪ שקל</option>
+          <option value="USD" ${cur==='USD'?'selected':''}>$ דולר</option>
+          <option value="EUR" ${cur==='EUR'?'selected':''}>€ יורו</option>
+          <option value="OTHER" ${cur==='OTHER'?'selected':''}>מטבע אחר</option>
+        </select>
+        <input type="text" class="exp-currency-other" data-idx="${idx}" placeholder="GBP, CHF..." value="${(row.currencyOther||'').replace(/"/g,'&quot;')}" style="display:${isOther?'block':'none'};margin-top:4px;font-size:12px;" />
+      </td>
       <td><input type="text" class="exp-invoice" data-idx="${idx}" value="${(row.invoice||'').replace(/"/g,'&quot;')}" /></td>
       <td>
         <div class="flex flex-wrap gap-1">
@@ -1692,6 +1704,21 @@ function renderExpenseTable() {
   tbody.querySelectorAll('.exp-amount').forEach(i => i.addEventListener('input', e => {
     App.expenseRows[+e.target.dataset.idx].amount = e.target.value;
     updateExpenseTotal();
+  }));
+  tbody.querySelectorAll('.exp-currency').forEach(sel => sel.addEventListener('change', e => {
+    const idx = +e.target.dataset.idx;
+    App.expenseRows[idx].currency = e.target.value;
+    const otherInput = e.target.closest('td').querySelector('.exp-currency-other');
+    if (e.target.value === 'OTHER') {
+      otherInput.style.display = 'block';
+    } else {
+      otherInput.style.display = 'none';
+      App.expenseRows[idx].currencyOther = '';
+    }
+    updateExpenseTotal();
+  }));
+  tbody.querySelectorAll('.exp-currency-other').forEach(i => i.addEventListener('input', e => {
+    App.expenseRows[+e.target.dataset.idx].currencyOther = e.target.value;
   }));
   tbody.querySelectorAll('.exp-invoice').forEach(i => i.addEventListener('input', e => {
     App.expenseRows[+e.target.dataset.idx].invoice = e.target.value;
@@ -1747,8 +1774,16 @@ function renderReceipts(idx) {
 }
 
 function updateExpenseTotal() {
-  const total = App.expenseRows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
-  $('#totExpense').textContent = total.toFixed(2);
+  const totals = {};
+  App.expenseRows.forEach(r => {
+    const amount = parseFloat(r.amount) || 0;
+    if (!amount) return;
+    const cur = r.currency || 'ILS';
+    const label = cur === 'ILS' ? '₪' : cur === 'USD' ? '$' : cur === 'EUR' ? '€' : (r.currencyOther || cur);
+    totals[label] = (totals[label] || 0) + amount;
+  });
+  const parts = Object.entries(totals).map(([sym, val]) => `${sym}${val.toFixed(2)}`);
+  $('#totExpense').textContent = parts.length ? parts.join(' | ') : '₪0.00';
 }
 
 function initExpense() {
@@ -2205,12 +2240,12 @@ function buildExpenseWorksheet() {
   const role = ($('#expRole') && $('#expRole').value) || '';
 
   const ws = {};
-  ws['!ref'] = 'A1:D27';
+  ws['!ref'] = 'A1:E27';
 
-  // Row 2 — Title (A2:D2 merged)
+  // Row 2 — Title (A2:E2 merged)
   setCell(ws, 'A2', 'דוח החזר הוצאות - DCG Tech Ltd', STYLE.boldTitle);
 
-  // Rows 3-5 — header info (column B span merged with C,D)
+  // Rows 3-5 — header info
   setCell(ws, 'A3', 'חודש שכר', STYLE.bold);
   setCell(ws, 'B3', monthLabel, STYLE.center);
   setCell(ws, 'A4', 'שם עובד',  STYLE.bold);
@@ -2222,7 +2257,8 @@ function buildExpenseWorksheet() {
   setCell(ws, 'A6', 'תאריך',          STYLE.header);
   setCell(ws, 'B6', 'הוצאה + פירוט', STYLE.header);
   setCell(ws, 'C6', 'סכום',          STYLE.header);
-  setCell(ws, 'D6', 'מס\' חשבונית', STYLE.header);
+  setCell(ws, 'D6', 'מטבע',          STYLE.header);
+  setCell(ws, 'E6', 'מס\' חשבונית', STYLE.header);
 
   // Rows 7-23 — expense rows (17 rows total)
   for (let i = 0; i < 17; i++) {
@@ -2232,13 +2268,18 @@ function buildExpenseWorksheet() {
       if (r.date)    setCell(ws, `A${rowNum}`, fmtDDMMYYYY(new Date(r.date)), STYLE.center);
       if (r.desc)    setCell(ws, `B${rowNum}`, r.desc, STYLE.rtl);
       if (r.amount !== '' && r.amount != null) setCell(ws, `C${rowNum}`, Number(r.amount), STYLE.number, { type: 'n' });
-      if (r.invoice) setCell(ws, `D${rowNum}`, r.invoice, STYLE.center);
+      const curCode = r.currency || 'ILS';
+      const curLabel = curCode === 'ILS' ? '₪ שקל' : curCode === 'USD' ? '$ דולר' : curCode === 'EUR' ? '€ יורו' : (r.currencyOther || curCode);
+      if (curCode) setCell(ws, `D${rowNum}`, curLabel, STYLE.center);
+      if (r.invoice) setCell(ws, `E${rowNum}`, r.invoice, STYLE.center);
     }
   }
 
-  // Row 24 — total (A24:B24 merged with label, C24 = SUM)
+  // Row 24 — totals per currency
   setCell(ws, 'A24', 'סה"כ:', STYLE.bold);
-  setCell(ws, 'C24', 0, STYLE.numberBold, { formula: 'SUM(C7:C23)', value: App.expenseRows.reduce((s,r) => s + (parseFloat(r.amount)||0), 0) });
+  const ilsTotal = App.expenseRows.filter(r => (r.currency||'ILS') === 'ILS').reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
+  setCell(ws, 'C24', ilsTotal, STYLE.numberBold, { type: 'n' });
+  setCell(ws, 'D24', '₪ שקל', STYLE.bold);
 
   // Row 27 — date + signature labels
   setCell(ws, 'A27', 'תאריך:',           STYLE.bold);
@@ -2247,13 +2288,13 @@ function buildExpenseWorksheet() {
   setCell(ws, 'D27', App.currentEmployee, STYLE.center);
 
   ws['!merges'] = [
-    { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }, // A2:D2 title
-    { s: { r: 2, c: 1 }, e: { r: 2, c: 3 } }, // B3:D3 month
-    { s: { r: 3, c: 1 }, e: { r: 3, c: 3 } }, // B4:D4 name
-    { s: { r: 4, c: 1 }, e: { r: 4, c: 3 } }, // B5:D5 role
+    { s: { r: 1, c: 0 }, e: { r: 1, c: 4 } }, // A2:E2 title
+    { s: { r: 2, c: 1 }, e: { r: 2, c: 4 } }, // B3:E3 month
+    { s: { r: 3, c: 1 }, e: { r: 3, c: 4 } }, // B4:E4 name
+    { s: { r: 4, c: 1 }, e: { r: 4, c: 4 } }, // B5:E5 role
     { s: { r: 23, c: 0 }, e: { r: 23, c: 1 } }, // A24:B24 total label
   ];
-  ws['!cols'] = [{ wch: 14 }, { wch: 36 }, { wch: 14 }, { wch: 18 }];
+  ws['!cols'] = [{ wch: 14 }, { wch: 32 }, { wch: 14 }, { wch: 12 }, { wch: 18 }];
   ws['!views'] = [{ RTL: true }];
   return ws;
 }
