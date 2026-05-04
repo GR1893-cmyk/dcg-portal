@@ -2608,20 +2608,26 @@ function generateTravelFileName() {
       Execute as: Me  |  Who has access: Anyone
    4. Copy the deployment URL and paste it below
    -------------------------------------------------------- */
-const GAS_EMAIL_URL = 'https://script.google.com/macros/s/AKfycbw3h0Wv4JIuUIgrY1SnHJAgErsIL48DL0bdNmdIeroY2rYyvJOTS6NNF_owvp1qnq6L7Q/exec';
+const GAS_EMAIL_URL = 'https://script.google.com/macros/s/AKfycbwgj6n6AF8Hul4-tKkzLGS10Seu3-IuTj_HPPAo-EuPGhq_pTCGVWRHHA0EhehufQtE2A/exec';
 const GAS_SECRET    = 'DCG-PORTAL-2026';  // must match the script
 
-async function sendReportEmail({ wb, fileName, subject, bodyText }) {
+async function sendReportEmail({ wb, fileName, subject, bodyText, receipts }) {
   if (GAS_EMAIL_URL === 'PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
     throw new Error('כתובת שרת המייל לא הוגדרה עדיין (GAS_EMAIL_URL). ראה הוראות בקוד.');
   }
   const wbBase64 = XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
+  // Convert receipt dataUrls → base64 (strip the "data:mime;base64," prefix)
+  const extraAttachments = (receipts || []).map(function(r) {
+    const data = r.dataUrl && r.dataUrl.includes(',') ? r.dataUrl.split(',')[1] : (r.dataUrl || '');
+    return { filename: r.name, mimeType: r.type || 'application/octet-stream', data };
+  });
   const payload = JSON.stringify({
     secret: GAS_SECRET,
     subject,
     body: bodyText,
     attachment: wbBase64,
     filename: fileName,
+    extraAttachments,
   });
   // no-cors: GAS redirects — browser gets opaque response, we assume success
   await fetch(GAS_EMAIL_URL, {
@@ -2677,7 +2683,8 @@ async function submitExpense() {
     const total      = App.expenseRows.reduce(function(s,r){ return s + (parseFloat(r.amount)||0); }, 0);
     const subject    = 'דוח חודשי - ' + App.currentEmployee + ' - ' + monthLabel;
     const bodyText   = 'שלום,\n\nמצורף דוח החזר הוצאות של ' + App.currentEmployee + ' לחודש ' + monthLabel + '.\n\nסה"כ: ₪' + total.toFixed(2) + '\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות';
-    try { await sendReportEmail({ wb, fileName, subject, bodyText }); toast('הדוח נשלח בהצלחה אל einav@dcg-tech.com', 'success'); }
+    const allReceipts = App.expenseRows.reduce(function(acc, r) { return acc.concat(r.receipts || []); }, []);
+    try { await sendReportEmail({ wb, fileName, subject, bodyText, receipts: allReceipts }); toast('הדוח נשלח בהצלחה אל einav@dcg-tech.com' + (allReceipts.length ? ' (כולל ' + allReceipts.length + ' קבלות)' : ''), 'success'); }
     catch (e) { console.error('[Graph] expense:', e); toast('הקובץ הורד אך שליחת המייל נכשלה. שלח ידנית.', 'error', 7000); }
     var role = ($('#expRole') && $('#expRole').value) || '';
     Store.appendHistory(App.currentEmployee, {

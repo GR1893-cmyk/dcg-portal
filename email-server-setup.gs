@@ -10,10 +10,13 @@
  *   6. בחר: Execute as = Me | Who has access = Anyone
  *   7. לחץ "Deploy" → אשר הרשאות → העתק את ה-URL
  *   8. הדבק את ה-URL בתוך index.html במקום: PASTE_YOUR_GOOGLE_APPS_SCRIPT_URL_HERE
+ *
+ * עדכון קיים: אם כבר יש deployment פעיל, לחץ "Deploy" → "Manage deployments"
+ *   → ערוך את הגרסה הקיימת → פרסם גרסה חדשה.
  */
 
-const SECRET = 'DCG-PORTAL-2026';
-const TO_EMAIL = 'einav@dcg-tech.com';
+const SECRET    = 'DCG-PORTAL-2026';
+const TO_EMAIL  = 'einav@dcg-tech.com';
 
 function doPost(e) {
   try {
@@ -26,21 +29,39 @@ function doPost(e) {
 
     // Decode the base64 Excel attachment
     const decoded = Utilities.base64Decode(data.attachment);
-    const blob = Utilities.newBlob(
+    const excelBlob = Utilities.newBlob(
       decoded,
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       data.filename
     );
 
-    // Send email via Gmail
+    // Build attachments array: Excel first, then any receipts
+    const attachments = [excelBlob];
+
+    if (data.extraAttachments && Array.isArray(data.extraAttachments)) {
+      data.extraAttachments.forEach(function(att) {
+        try {
+          if (!att.data) return; // skip empty
+          const bytes = Utilities.base64Decode(att.data);
+          const blob  = Utilities.newBlob(bytes, att.mimeType || 'application/octet-stream', att.filename || 'קבלה');
+          attachments.push(blob);
+        } catch (attachErr) {
+          Logger.log('Failed to decode attachment: ' + att.filename + ' — ' + attachErr);
+        }
+      });
+    }
+
+    // Send email via Gmail with all attachments
     GmailApp.sendEmail(TO_EMAIL, data.subject, data.body, {
-      attachments: [blob],
+      attachments: attachments,
       name: 'DCG Portal',
     });
 
-    return jsonResponse({ success: true });
+    Logger.log('Email sent to ' + TO_EMAIL + ' with ' + attachments.length + ' attachment(s).');
+    return jsonResponse({ success: true, attachments: attachments.length });
 
   } catch (err) {
+    Logger.log('doPost error: ' + err);
     return jsonResponse({ error: err.toString() });
   }
 }
