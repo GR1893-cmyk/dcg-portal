@@ -1,0 +1,48 @@
+name: iOS Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build DCG Portal for iOS Simulator
+    runs-on: macos-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Show Xcode version
+        run: xcodebuild -version
+
+      - name: Build app
+        run: |
+          set -o pipefail
+          xcodebuild \
+            -project "DCGPortal-iOS/DCGPortal.xcodeproj" \
+            -scheme "DCGPortal" \
+            -configuration Release \
+            -destination "generic/platform=iOS Simulator" \
+            -derivedDataPath "$PWD/build/DerivedData" \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Package simulator app
+        run: |
+          APP_PATH="$(find "$PWD/build/DerivedData/Build/Products/Release-iphonesimulator" -name 'DCGPortal.app' -type d -maxdepth 2 | head -n 1)"
+          if [ -z "$APP_PATH" ]; then
+            echo "DCGPortal.app was not found"
+            exit 1
+          fi
+          ditto -c -k --keepParent "$APP_PATH" "$PWD/DCGPortal-simulator-app.zip"
+
+      - name: Upload app artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DCGPortal-simulator-app
+          path: DCGPortal-simulator-app.zip
+          if-no-files-found: error
