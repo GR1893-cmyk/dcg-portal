@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <!-- Security: Content Security Policy — limits where scripts/styles/images can come from -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://fonts.gstatic.com https://script.google.com https://script.googleusercontent.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdn.tailwindcss.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob:; connect-src 'self' https://fonts.gstatic.com https://script.google.com https://script.googleusercontent.com; frame-src 'self' blob:; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
 <meta http-equiv="X-Content-Type-Options" content="nosniff" />
 <meta http-equiv="Referrer-Policy" content="no-referrer" />
 <meta http-equiv="Permissions-Policy" content="camera=(self), geolocation=()" />
@@ -1205,6 +1205,9 @@ const App = {
 /* ---------- DOM helpers ---------- */
 const $ = sel => document.querySelector(sel);
 const $$ = sel => document.querySelectorAll(sel);
+const escapeHtml = s => String(s == null ? '' : s)
+  .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+  .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 
 function showScreen(id) {
   $$('.screen').forEach(s => s.classList.add('hidden'));
@@ -1471,9 +1474,9 @@ async function resendHistoryItem(idx) {
       wb = generateWorkbook();
       fileName = generateFileName(App.expenseMonth);
       const monthLabel = fmtMonthLabel(it.month);
-      const total = (it.payload.rows || []).reduce((s,r) => s + (parseFloat(r.amount)||0), 0);
+      const totalText = expenseTotalsText(it.payload.rows || []);
       subject = `דוח חודשי - ${App.currentEmployee} - ${monthLabel}`;
-      bodyText = `שלום,\n\nמצורף דוח החזר הוצאות של ${App.currentEmployee} לחודש ${monthLabel}.\n\nסה"כ: ₪${total.toFixed(2)}\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות`;
+      bodyText = `שלום,\n\nמצורף דוח החזר הוצאות של ${App.currentEmployee} לחודש ${monthLabel}.\n\nסה"כ: ${totalText}\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות`;
       if (roleField) roleField.value = prevRole;
     } else if (it.type === 'travel') {
       App.travelData = it.payload.data || {};
@@ -1481,6 +1484,9 @@ async function resendHistoryItem(idx) {
       fileName = generateTravelFileName();
       subject = `דוח נסיעה - ${App.currentEmployee} - ${it.dest || ''} (${it.depart || ''})`;
       bodyText = `שלום,\n\nמצורף דוח נסיעה של ${App.currentEmployee}.\n\nיעד: ${it.dest || '—'}\nתאריכי נסיעה: ${it.depart || '—'}\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות`;
+    } else {
+      toast('סוג דוח לא מוכר: ' + it.type, 'error');
+      return;
     }
 
     XLSX.writeFile(wb, fileName);
@@ -1499,6 +1505,9 @@ async function resendHistoryItem(idx) {
       status: 'resent', at: new Date().toISOString(), payload: it.payload,
     });
     refreshDashboard();
+  } catch (err) {
+    console.error('resendHistoryItem failed:', err);
+    toast('שגיאה בשליחה מחדש: ' + (err && err.message || err), 'error', 6000);
   } finally {
     Object.assign(App, snapshot);
   }
@@ -1738,7 +1747,7 @@ function renderExpenseTable() {
   tbody.querySelectorAll('.exp-del').forEach(b => b.addEventListener('click', e => {
     const idx = +e.target.dataset.idx;
     App.expenseRows.splice(idx, 1);
-    if (App.expenseRows.length === 0) App.expenseRows.push({date:'', desc:'', amount:'', invoice:'', receipts:[]});
+    if (App.expenseRows.length === 0) App.expenseRows.push({date:'', desc:'', amount:'', currency:'ILS', currencyOther:'', invoice:'', receipts:[]});
     renderExpenseTable();
     updateExpenseTotal();
   }));
@@ -1756,8 +1765,8 @@ function renderReceipts(idx) {
     const preview = isImg
       ? `<img src="${rec.dataUrl}" style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border-soft); cursor:pointer;" data-view="${idx}-${ri}" alt=""/>`
       : `<span style="cursor:pointer; font-size:18px;" data-view="${idx}-${ri}">📄</span>`;
-    const shortName = rec.name.length > 14 ? rec.name.slice(0,12)+'…' : rec.name;
-    return `<span class="receipt-chip" title="לחץ לצפייה — ${rec.name}">${preview} <span style="cursor:pointer;" data-view="${idx}-${ri}">${shortName}</span> <button data-rcp="${idx}-${ri}" title="מחק">✕</button></span>`;
+    const shortName = escapeHtml(rec.name.length > 14 ? rec.name.slice(0,12)+'…' : rec.name);
+    return `<span class="receipt-chip" title="לחץ לצפייה — ${escapeHtml(rec.name)}">${preview} <span style="cursor:pointer;" data-view="${idx}-${ri}">${shortName}</span> <button data-rcp="${idx}-${ri}" title="מחק">✕</button></span>`;
   }).join('');
   // View on click (image thumbnail OR name)
   el.querySelectorAll('[data-view]').forEach(t => t.addEventListener('click', e => {
@@ -1773,9 +1782,9 @@ function renderReceipts(idx) {
   }));
 }
 
-function updateExpenseTotal() {
+function expenseTotalsText(rows) {
   const totals = {};
-  App.expenseRows.forEach(r => {
+  (rows || []).forEach(r => {
     const amount = parseFloat(r.amount) || 0;
     if (!amount) return;
     const cur = r.currency || 'ILS';
@@ -1783,7 +1792,10 @@ function updateExpenseTotal() {
     totals[label] = (totals[label] || 0) + amount;
   });
   const parts = Object.entries(totals).map(([sym, val]) => `${sym}${val.toFixed(2)}`);
-  $('#totExpense').textContent = parts.length ? parts.join(' | ') : '₪0.00';
+  return parts.length ? parts.join(' | ') : '₪0.00';
+}
+function updateExpenseTotal() {
+  $('#totExpense').textContent = expenseTotalsText(App.expenseRows);
 }
 
 function initExpense() {
@@ -1935,8 +1947,8 @@ function renderTravelReceipts(idx) {
     const preview = isImg
       ? `<img src="${rec.dataUrl}" style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid var(--border-soft); cursor:pointer;" data-trv-view="${idx}-${ri}" alt=""/>`
       : `<span style="cursor:pointer; font-size:18px;" data-trv-view="${idx}-${ri}">📄</span>`;
-    const shortName = rec.name.length > 14 ? rec.name.slice(0,12)+'…' : rec.name;
-    return `<span class="receipt-chip" title="לחץ לצפייה — ${rec.name}">${preview} <span style="cursor:pointer;" data-trv-view="${idx}-${ri}">${shortName}</span> <button data-trv-rcp="${idx}-${ri}" title="מחק">✕</button></span>`;
+    const shortName = escapeHtml(rec.name.length > 14 ? rec.name.slice(0,12)+'…' : rec.name);
+    return `<span class="receipt-chip" title="לחץ לצפייה — ${escapeHtml(rec.name)}">${preview} <span style="cursor:pointer;" data-trv-view="${idx}-${ri}">${shortName}</span> <button data-trv-rcp="${idx}-${ri}" title="מחק">✕</button></span>`;
   }).join('');
   el.querySelectorAll('[data-trv-view]').forEach(t => t.addEventListener('click', e => {
     e.stopPropagation();
@@ -2061,7 +2073,6 @@ function initTravel() {
       App.travelData.rates[code] = el.value;
       // Recalculate all rows that use this currency
       App.travelData.rows.forEach((row, i) => {
-        const rowCurr = row.currency === code ? code : (row.currency || code);
         if (row.currency === code || (code === 'OTHER' && !['EUR','USD','GBP','CHF','ILS'].includes(row.currency))) {
           autoConvertRow(i);
         }
@@ -2117,7 +2128,8 @@ function resizeTrvSigPad() {
   trvSigCtx.lineJoin = 'round';
   if (App.trvSignatureData) {
     const img = new Image();
-    img.onload = () => trvSigCtx.drawImage(img, 0, 0, trvSigCanvas.width, trvSigCanvas.height);
+    // ctx is scaled by devicePixelRatio — draw at logical (CSS) size, not physical pixels
+    img.onload = () => trvSigCtx.drawImage(img, 0, 0, w, h);
     img.src = App.trvSignatureData;
   }
 }
@@ -2177,8 +2189,10 @@ function resizeSignaturePad() {
 }
 function drawSavedSignature() {
   if (!sigCanvas || !App.signatureData) return;
+  const ratio = window.devicePixelRatio || 1;
   const img = new Image();
-  img.onload = () => sigCtx.drawImage(img, 0, 0, sigCanvas.width, sigCanvas.height);
+  // ctx is scaled by devicePixelRatio — draw at logical (CSS) size, not physical pixels
+  img.onload = () => sigCtx.drawImage(img, 0, 0, sigCanvas.width / ratio, sigCanvas.height / ratio);
   img.src = App.signatureData;
 }
 
@@ -2646,6 +2660,7 @@ async function submitAttendance() {
   const month = App.attendanceMonth;
   if (!month) { toast('בחר חודש לפני שליחה', 'error'); return; }
   const btn = $('#btnAttSubmit');
+  const btnHtml = btn.innerHTML;
   btn.disabled = true; btn.textContent = 'מייצר Excel...';
   try {
     const wb       = generateWorkbook();
@@ -2667,22 +2682,23 @@ async function submitAttendance() {
     $('#confirmSummary').innerHTML = '<p>📋 <strong>דוח נוכחות</strong> · ' + monthLabel + '</p><p class="mt-1">שעות עבודה: ' + tots.hours + '</p><p>ימי חופשה: ' + tots.vac + ' · ימי מחלה: ' + tots.sick + ' · ימי מילואים: ' + tots.reserve + (tots.abroad ? ' · ימי חו״ל: ' + tots.abroad : '') + '</p>';
     showScreen('screen-confirm');
   } catch (err) { console.error('submitAttendance:', err); toast('שגיאה: ' + (err.message || err), 'error', 6000); }
-  finally { btn.disabled = false; btn.textContent = 'שלח דוח (ייצור Excel + שליחה במייל)'; }
+  finally { btn.disabled = false; btn.innerHTML = btnHtml; }
 }
 
 async function submitExpense() {
   const month = App.expenseMonth;
   if (!month) { toast('בחר חודש שכר לפני שליחה', 'error'); return; }
   const btn = $('#btnExpSubmit');
+  const btnHtml = btn.innerHTML;
   btn.disabled = true; btn.textContent = 'מייצר Excel...';
   try {
     const wb       = generateWorkbook();
     const fileName = generateFileName(month);
     XLSX.writeFile(wb, fileName);
     const monthLabel = fmtMonthLabel(month);
-    const total      = App.expenseRows.reduce(function(s,r){ return s + (parseFloat(r.amount)||0); }, 0);
+    const totalText  = expenseTotalsText(App.expenseRows);
     const subject    = 'דוח חודשי - ' + App.currentEmployee + ' - ' + monthLabel;
-    const bodyText   = 'שלום,\n\nמצורף דוח החזר הוצאות של ' + App.currentEmployee + ' לחודש ' + monthLabel + '.\n\nסה"כ: ₪' + total.toFixed(2) + '\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות';
+    const bodyText   = 'שלום,\n\nמצורף דוח החזר הוצאות של ' + App.currentEmployee + ' לחודש ' + monthLabel + '.\n\nסה"כ: ' + totalText + '\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות';
     const allReceipts = App.expenseRows.reduce(function(acc, r) { return acc.concat(r.receipts || []); }, []);
     try { await sendReportEmail({ wb, fileName, subject, bodyText, receipts: allReceipts }); toast('הדוח נשלח בהצלחה אל einav@dcg-tech.com' + (allReceipts.length ? ' (כולל ' + allReceipts.length + ' קבלות)' : ''), 'success'); }
     catch (e) { console.error('[Graph] expense:', e); toast('הקובץ הורד אך שליחת המייל נכשלה. שלח ידנית.', 'error', 7000); }
@@ -2692,16 +2708,17 @@ async function submitExpense() {
       payload: { rows: JSON.parse(JSON.stringify(App.expenseRows)), role, signature: App.signatureData },
     });
     App._editingHistoryId = null; _lastWb = wb; _lastFileName = fileName;
-    $('#confirmSummary').innerHTML = '<p>💰 <strong>דוח החזר הוצאות</strong> · ' + monthLabel + '</p><p class="mt-1">סה"כ להחזר: ₪' + total.toFixed(2) + '</p><p>מספר שורות: ' + App.expenseRows.filter(function(r){ return r.desc||r.amount; }).length + '</p>';
+    $('#confirmSummary').innerHTML = '<p>💰 <strong>דוח החזר הוצאות</strong> · ' + monthLabel + '</p><p class="mt-1">סה"כ להחזר: ' + totalText + '</p><p>מספר שורות: ' + App.expenseRows.filter(function(r){ return r.desc||r.amount; }).length + '</p>';
     showScreen('screen-confirm');
   } catch (err) { console.error('submitExpense:', err); toast('שגיאה: ' + (err.message || err), 'error', 6000); }
-  finally { btn.disabled = false; btn.textContent = 'שלח דוח (ייצור Excel + שליחה במייל)'; }
+  finally { btn.disabled = false; btn.innerHTML = btnHtml; }
 }
 
 async function submitTravel() {
   var td = App.travelData;
   if (!td.dest) { toast('הזן יעד נסיעה לפני שליחה', 'error'); return; }
   var btn = $('#btnTrvSubmit');
+  var btnHtml = btn.innerHTML;
   btn.disabled = true; btn.textContent = 'מייצר Excel...';
   try {
     var wb       = generateTravelWorkbook();
@@ -2722,12 +2739,12 @@ async function submitTravel() {
     $('#confirmSummary').innerHTML = '<p>✈️ <strong>דוח נסיעה לחו"ל</strong></p><p class="mt-1">יעד: ' + (td.dest||'—') + '</p><p>תאריכים: ' + dep + ' — ' + ret + '</p><p>סה"כ הוצאות: ₪' + totalIls.toFixed(2) + '</p>';
     showScreen('screen-confirm');
   } catch (err) { console.error('submitTravel:', err); toast('שגיאה: ' + (err.message || err), 'error', 6000); }
-  finally { btn.disabled = false; btn.textContent = 'שלח דוח (ייצור Excel + שליחה במייל)'; }
+  finally { btn.disabled = false; btn.innerHTML = btnHtml; }
 }
 
 /* ---------- Receipt Viewer + Crop ---------- */
 var ReceiptViewer = (function() {
-  var _type, _rowIdx, _recIdx, _rotAngle = 0, _currentDataUrl = null;
+  var _type, _rowIdx, _recIdx, _rotAngle = 0, _currentDataUrl = null, _pdfUrl = null;
   var _cropImg = null, _cropW = 0, _cropH = 0;
   var _box = { x:0, y:0, w:0, h:0 };
   var _drag = null, _dragStart = null, _boxStart = null;
@@ -2763,7 +2780,9 @@ var ReceiptViewer = (function() {
       imgEl.src = rec.dataUrl; imgEl.style.transform = ''; imgEl.classList.remove('hidden'); pdfEl.classList.add('hidden');
       $('#receiptCropBtn').classList.remove('hidden'); $('#receiptRotateBtn').classList.remove('hidden');
     } else if (isPdf) {
-      pdfEl.src = URL.createObjectURL(_toBlob(rec.dataUrl));
+      if (_pdfUrl) { URL.revokeObjectURL(_pdfUrl); _pdfUrl = null; }
+      _pdfUrl = URL.createObjectURL(_toBlob(rec.dataUrl));
+      pdfEl.src = _pdfUrl;
       pdfEl.classList.remove('hidden'); imgEl.classList.add('hidden');
       $('#receiptCropBtn').classList.add('hidden'); $('#receiptRotateBtn').classList.add('hidden');
     }
@@ -2772,6 +2791,7 @@ var ReceiptViewer = (function() {
   function close() {
     var modal = $('#receiptModal'); modal.classList.add('hidden'); modal.style.display = 'none';
     $('#receiptImg').src = ''; $('#receiptPdf').src = '';
+    if (_pdfUrl) { URL.revokeObjectURL(_pdfUrl); _pdfUrl = null; }
     var pane = $('#receiptCropPane'); pane.classList.add('hidden'); pane.style.display = 'none';
   }
 
@@ -2873,12 +2893,12 @@ var ReceiptViewer = (function() {
     }
     function onUp() { _drag = null; }
     container.addEventListener('mousedown', onDown);
-    container.addEventListener('mousemove', onMove);
-    container.addEventListener('mouseup', onUp);
-    container.addEventListener('mouseleave', onUp);
+    // Track move/up on document so the drag isn't lost when the cursor leaves the container
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
     container.addEventListener('touchstart', onDown, { passive: false });
-    container.addEventListener('touchmove',  onMove, { passive: false });
-    container.addEventListener('touchend',   onUp);
+    document.addEventListener('touchmove',  onMove, { passive: false });
+    document.addEventListener('touchend',   onUp);
   }
 
   return { open: open, close: close, rotate: rotate, download: download,
@@ -2912,6 +2932,9 @@ document.addEventListener('DOMContentLoaded', function() {
     var target = el.dataset.go;
     if (!target) return;
     if (!App.currentEmployee && target !== 'screen-login') return;
+    // Normal navigation (dashboard cards / back buttons) always exits "edit history" mode.
+    // History editing enters forms via editHistoryItem() directly, not via data-go.
+    App._editingHistoryId = null;
     showScreen(target);
   });
 
@@ -2953,7 +2976,7 @@ document.addEventListener('DOMContentLoaded', function() {
   });
   $('#btnAddExpenseRow').addEventListener('click', function() {
     if (App.expenseRows.length >= 17) { toast('מקסימום 17 שורות', 'error'); return; }
-    App.expenseRows.push({ date: '', desc: '', amount: '', invoice: '', receipts: [] });
+    App.expenseRows.push({ date: '', desc: '', amount: '', currency: 'ILS', currencyOther: '', invoice: '', receipts: [] });
     renderExpenseTable();
   });
   $('#btnExpSaveDraft').addEventListener('click', function() {
