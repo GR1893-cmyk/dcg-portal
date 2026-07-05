@@ -1455,7 +1455,7 @@ async function resendHistoryItem(idx) {
   };
 
   try {
-    let wb, fileName, subject, bodyText;
+    let wb, fileName, subject, bodyText, resendReceipts = [];
 
     if (it.type === 'attendance') {
       App.attendanceMonth = it.month;
@@ -1478,12 +1478,14 @@ async function resendHistoryItem(idx) {
       subject = `דוח חודשי - ${App.currentEmployee} - ${monthLabel}`;
       bodyText = `שלום,\n\nמצורף דוח החזר הוצאות של ${App.currentEmployee} לחודש ${monthLabel}.\n\nסה"כ: ${totalText}\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות`;
       if (roleField) roleField.value = prevRole;
+      resendReceipts = (it.payload.rows || []).reduce((acc, r) => acc.concat(r.receipts || []), []);
     } else if (it.type === 'travel') {
       App.travelData = it.payload.data || {};
       wb = generateTravelWorkbook();
       fileName = generateTravelFileName();
       subject = `דוח נסיעה - ${App.currentEmployee} - ${it.dest || ''} (${it.depart || ''})`;
       bodyText = `שלום,\n\nמצורף דוח נסיעה של ${App.currentEmployee}.\n\nיעד: ${it.dest || '—'}\nתאריכי נסיעה: ${it.depart || '—'}\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות`;
+      resendReceipts = ((it.payload.data || {}).rows || []).reduce((acc, r) => acc.concat(r.receipts || []), []);
     } else {
       toast('סוג דוח לא מוכר: ' + it.type, 'error');
       return;
@@ -1492,8 +1494,8 @@ async function resendHistoryItem(idx) {
     XLSX.writeFile(wb, fileName);
 
     try {
-      await sendReportEmail({ wb, fileName, subject, bodyText });
-      toast('📤 הדוח נשלח מחדש בהצלחה אל einav@dcg-tech.com', 'success');
+      await sendReportEmail({ wb, fileName, subject, bodyText, receipts: resendReceipts });
+      toast('📤 הדוח נשלח מחדש בהצלחה אל einav@dcg-tech.com' + (resendReceipts.length ? ' (כולל ' + resendReceipts.length + ' קבלות)' : ''), 'success');
     } catch (emailErr) {
       console.error('[Graph] resend email failed:', emailErr);
       toast('⚠️ הקובץ הורד אך שליחת המייל נכשלה. שלח ידנית.', 'error', 7000);
@@ -2635,6 +2637,13 @@ async function sendReportEmail({ wb, fileName, subject, bodyText, receipts }) {
     const data = r.dataUrl && r.dataUrl.includes(',') ? r.dataUrl.split(',')[1] : (r.dataUrl || '');
     return { filename: r.name, mimeType: r.type || 'application/octet-stream', data };
   });
+  // Gmail rejects emails over ~25MB of attachments. Because the relay call is
+  // opaque (no-cors) we can't detect that failure — so block oversized sends
+  // up-front with a clear error instead of showing a false "sent" message.
+  const totalBytes = Math.round((wbBase64.length + extraAttachments.reduce((s, a) => s + (a.data ? a.data.length : 0), 0)) * 0.75);
+  if (totalBytes > 20 * 1024 * 1024) {
+    throw new Error('סך הקבלות המצורפות גדול מ-20MB ולא ניתן לשלוח במייל. הקטן/מחק חלק מהקבלות ונסה שוב, או שלח את הקובץ שהורד ידנית.');
+  }
   const payload = JSON.stringify({
     secret: GAS_SECRET,
     subject,
@@ -2729,8 +2738,9 @@ async function submitTravel() {
     var ret = (td.return  || '').slice(0, 10);
     var subject  = 'דוח נסיעה - ' + App.currentEmployee + ' - ' + td.dest + ' (' + dep + ')';
     var bodyText = 'שלום,\n\nמצורף דוח נסיעה לחו"ל של ' + App.currentEmployee + '.\n\nיעד: ' + (td.dest||'—') + '\nתאריכים: ' + dep + ' — ' + ret + '\nסה"כ הוצאות: ₪' + totalIls.toFixed(2) + '\n\nבברכה,\nDCG Tech Ltd - מערכת דוחות';
-    try { await sendReportEmail({ wb, fileName, subject, bodyText }); toast('הדוח נשלח בהצלחה אל einav@dcg-tech.com', 'success'); }
-    catch (e) { console.error('[Graph] travel:', e); toast('הקובץ הורד אך שליחת המייל נכשלה. שלח ידנית.', 'error', 7000); }
+    var trvReceipts = (td.rows || []).reduce(function(acc, r) { return acc.concat(r.receipts || []); }, []);
+    try { await sendReportEmail({ wb, fileName, subject, bodyText, receipts: trvReceipts }); toast('הדוח נשלח בהצלחה אל einav@dcg-tech.com' + (trvReceipts.length ? ' (כולל ' + trvReceipts.length + ' קבלות)' : ''), 'success'); }
+    catch (e) { console.error('[Graph] travel:', e); toast('הקובץ הורד אך שליחת המייל נכשלה. שלח ידנית. (' + (e && e.message || e) + ')', 'error', 8000); }
     Store.appendHistory(App.currentEmployee, {
       type: 'travel', dest: td.dest, depart: dep, status: 'submitted', at: new Date().toISOString(),
       payload: { data: JSON.parse(JSON.stringify(td)), signature: App.trvSignatureData },
